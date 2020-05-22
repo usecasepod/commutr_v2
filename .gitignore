@@ -15,3 +15,30 @@
 x64/
 x86/
 bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Bb]uild/
+_[Bb]uild/
+[Dd]eploy/
+_[Dd]eploy/
+
+#vs 2015
+.vs/
+
+#Nuget Packages
+*.nupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+# FSharp
+lib/debug
+lib/release
+Debug
+*.suo
+*.user
+obj
+bin
+*.exe
