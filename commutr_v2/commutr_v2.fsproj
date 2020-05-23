@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="AppColors.fs" />
     <Compile Include="VehicleItem.fs" />
     <Compile Include="VehicleListing.fs" />
     <Compile Include="commutr_v2.fs" />
@@ -18,5 +19,7 @@
     <PackageReference Include="FSharp.Core" Version="4.7.1" />
     <PackageReference Update="FSharp.Core" Version="4.7.1" /> <!-- workaround for VSMac bug https://github.com/mono/monodevelop/pull/5137 --> 
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.68.3" />
+    <PackageReference Include="Fabulous.XamarinForms.SkiaSharp" Version="0.54.1" />
   </ItemGroup>
 </Project>

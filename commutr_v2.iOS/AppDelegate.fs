@@ -7,14 +7,15 @@ open Foundation
 open Xamarin.Forms
 open Xamarin.Forms.Platform.iOS
 
-[<Register ("AppDelegate")>]
-type AppDelegate () =
-    inherit FormsApplicationDelegate ()
+[<Register("AppDelegate")>]
+type AppDelegate() =
+    inherit FormsApplicationDelegate()
 
-    override this.FinishedLaunching (app, options) =
+    override this.FinishedLaunching(app, options) =
+        Forms.SetFlags("SwipeView_Experimental")
         Forms.Init()
         let appcore = new commutr_v2.App()
-        this.LoadApplication (appcore)
+        this.LoadApplication(appcore)
         base.FinishedLaunching(app, options)
 
 module Main =
@@ -22,4 +23,3 @@ module Main =
     let main args =
         UIApplication.Main(args, null, "AppDelegate")
         0
-
