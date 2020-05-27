@@ -1,6 +1,7 @@
 ﻿// Copyright 2018-2019 Fabulous contributors. See LICENSE.md for license.
-namespace commutr_v2
+namespace Commutr_v2
 
+open Commutr_v2.Views
 open System.Diagnostics
 open Fabulous
 open Fabulous.XamarinForms
@@ -14,9 +15,13 @@ module App =
         | VehicleListUpdated of VehicleListing.Msg
         | RefreshVehicles
 
+    let shellRef = ViewRef<Shell>()
+
     let initModel = { Vehicles = VehicleListing.init () }
 
-    let init () = initModel, Cmd.none
+    let init () =
+        Routing.RegisterRoute("vehicles", typeof<VehiclePage>)
+        initModel, Cmd.none
 
     let update msg model =
         match msg with
@@ -33,11 +38,29 @@ module App =
         let vehicleList =
             VehicleListing.view model.Vehicles (fun msg -> dispatch (VehicleListUpdated msg))
 
-        View.ContentPage
-            (backgroundColor = AppColors.silverSandLight,
-             content =
+        View.Shell
+            (ref = shellRef,
+             flyoutBackgroundColor = AppColors.silverSand,
+             shellForegroundColor = AppColors.cinereousMediumDark,
+             shellBackgroundColor = AppColors.silverSand,
+             flyoutHeader =
                  View.StackLayout
-                     (padding = Thickness 20.0, verticalOptions = LayoutOptions.Center, children = [ vehicleList ]))
+                     (margin = Thickness(25.0, 75.0, 25.0, 25.0),
+                      padding = Thickness 50.0,
+                      children =
+                          [ View.Label
+                              (text = "Welcome to Commutr!",
+                               textColor = AppColors.cinereousMediumDark,
+                               fontSize = FontSize.Named(NamedSize.Large),
+                               horizontalTextAlignment = TextAlignment.Center) ]),
+             items =
+                 [ View.FlyoutItem
+                     (title = "Vehicles",
+                      route = "vehicles",
+                      items =
+                          [ View.ShellContent
+                              (content =
+                                  View.ContentPage(backgroundColor = AppColors.silverSandLight, content = vehicleList)) ]) ])
 
     // Note, this declaration is needed if you enable LiveUpdate
     let program =

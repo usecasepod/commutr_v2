@@ -7,9 +7,11 @@
 
   <ItemGroup>
     <Compile Include="AppColors.fs" />
-    <Compile Include="VehicleItem.fs" />
-    <Compile Include="VehicleListing.fs" />
-    <Compile Include="commutr_v2.fs" />
+    <Compile Include="Models/Vehicle.fs"/>
+    <Compile Include="Views/VehicleItem.fs" />
+    <Compile Include="Views/VehicleListing.fs" />
+    <Compile Include="Routes.fs" />
+    <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="4.6.0.726" />

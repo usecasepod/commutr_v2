@@ -1,27 +1,22 @@
-namespace commutr_v2
+namespace Commutr_v2.Views
 
+open Commutr_v2
+open Commutr_v2.Models
 open Fabulous.XamarinForms
 open Fabulous.XamarinForms.SkiaSharp
 open SkiaSharp.Views.Forms
 open Xamarin.Forms
 
 module VehicleItem =
-    type Model =
-        { Id: int
-          Make: string
-          Model: string
-          Year: int
-          IsPrimary: bool }
-
     type Msg = TogglePrimary of bool
 
-    let init (initModel: Model) = initModel
+    let init (initModel: Vehicle) = initModel
 
     let update msg model =
         match msg with
         | TogglePrimary isPrimary -> { model with IsPrimary = isPrimary }
 
-    let view (model: Model) dispatch =
+    let view (vehicle) dispatch =
         View.StackLayout
             (padding = Thickness 5.0,
              children =
@@ -50,7 +45,7 @@ module VehicleItem =
                                                use paint =
                                                    new SkiaSharp.SKPaint(Style = SkiaSharp.SKPaintStyle.Fill,
                                                                          Color =
-                                                                             (if model.IsPrimary then
+                                                                             (if vehicle.IsPrimary then
                                                                                  AppColors.mandarin.ToSKColor()
                                                                               else
                                                                                   AppColors.silverSandLight.ToSKColor()),
@@ -59,6 +54,6 @@ module VehicleItem =
                                                canvas.DrawCircle
                                                    (float32 (info.Width / 2), float32 (info.Height / 2), 10.0f, paint)),
                                         invalidate = true) //This will redraw on every call to update
-                                     View.Label(text = model.Year.ToString())
-                                     View.Label(text = model.Make)
-                                     View.Label(text = model.Model) ])) ])
+                                     View.Label(text = vehicle.Year.ToString())
+                                     View.Label(text = vehicle.Make)
+                                     View.Label(text = vehicle.Model) ])) ])

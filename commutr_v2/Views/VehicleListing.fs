@@ -1,39 +1,33 @@
-namespace commutr_v2
+namespace Commutr_v2.Views
 
+open Commutr_v2
+open Commutr_v2.Models
 open Fabulous
 open Fabulous.XamarinForms
 open Xamarin.Forms
 
 module VehicleListing =
     type Model =
-        { Vehicles: VehicleItem.Model list
-          SelectedVehicle: Option<VehicleItem.Model> }
+        { Vehicles: Vehicle list
+          SelectedVehicle: Option<Vehicle>
+          IsInserting: bool }
 
     type Msg =
-        | Insert
+        | Inserting of bool
         | Remove of int
         | Modified of int * VehicleItem.Msg
         | SelectVehicle of int
 
     let initModel: Model =
-        { Vehicles =
-              [ { Id = 1
-                  Make = "Honda"
-                  Model = "Accord"
-                  Year = 2005
-                  IsPrimary = false }
-                { Id = 2
-                  Make = "Honda"
-                  Model = "Insight"
-                  Year = 2019
-                  IsPrimary = true } ]
-          SelectedVehicle = None }
+        { Vehicles = []
+          SelectedVehicle = None
+          IsInserting = false }
 
     let init () = initModel
 
     let update msg model =
         match msg with
-        | Insert -> model //TODO: Make this do something
+        | Inserting isInserting -> { model with IsInserting = isInserting } //TODO: Make this do something
         | Remove id ->
             { model with
                   Vehicles =
@@ -88,4 +82,17 @@ module VehicleListing =
         View.CollectionView
             (items,
              emptyView =
-                 View.StackLayout(spacing = 5.0, children = [ View.Label(text = "You don't have any vehicles!") ]))
+                 View.StackLayout
+                     (spacing = 5.0,
+                      backgroundColor = AppColors.silverSandLight,
+                      padding = Thickness 25.0,
+                      children =
+                          [ View.Label
+                              (text = "You don't have any vehicles!",
+                               horizontalTextAlignment = TextAlignment.Center,
+                               verticalTextAlignment = TextAlignment.Center,
+                               textColor = AppColors.cinereousMediumDark)
+                            View.Button
+                                (text = "Add a Vehicle",
+                                 backgroundColor = AppColors.cinereous,
+                                 textColor = AppColors.ghostWhite) ]))
