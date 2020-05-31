@@ -1,7 +1,7 @@
 ﻿// Copyright 2018-2019 Fabulous contributors. See LICENSE.md for license.
-namespace Commutr_v2
+namespace CommutrV2
 
-open Commutr_v2.Views
+open CommutrV2.Views
 open System.Diagnostics
 open Fabulous
 open Fabulous.XamarinForms
@@ -11,9 +11,7 @@ open Xamarin.Forms
 module App =
     type Model = { Vehicles: VehicleListing.Model }
 
-    type Msg =
-        | VehicleListUpdated of VehicleListing.Msg
-        | RefreshVehicles
+    type Msg = VehicleListUpdated of VehicleListing.Msg
 
     let shellRef = ViewRef<Shell>()
 
@@ -29,14 +27,10 @@ module App =
             { model with
                   Vehicles = VehicleListing.update listMsg model.Vehicles },
             Cmd.none
-        | RefreshVehicles ->
-            { model with
-                  Vehicles = VehicleListing.init () },
-            Cmd.none
 
-    let view (model: Model) (dispatch: Dispatch<Msg>) =
+    let view model dispatch =
         let vehicleList =
-            VehicleListing.view model.Vehicles (fun msg -> dispatch (VehicleListUpdated msg))
+            VehicleListing.view model.Vehicles (VehicleListUpdated >> dispatch)
 
         View.Shell
             (ref = shellRef,
@@ -76,16 +70,15 @@ type App() as app =
 #endif
         |> XamarinFormsProgram.run app
 
-#if DEBUG
-    // Uncomment this line to enable live update in debug mode.
-    // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/tools.html#live-update for further  instructions.
-    //
-    do runner.EnableLiveUpdate()
-#endif
+    // #if DEBUG
+    //     // Uncomment this line to enable live update in debug mode.
+    //     // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/tools.html#live-update for further  instructions.
+    //     //
+    //     do runner.EnableLiveUpdate()
+    // #endif
 
-// Uncomment this code to save the application state to app.Properties using Newtonsoft.Json
-// See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/models.html#saving-application-state for further  instructions.
-#if APPSAVE
+    // Uncomment this code to save the application state to app.Properties using Newtonsoft.Json
+    // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/models.html#saving-application-state for further  instructions.
     let modelId = "model"
 
     override __.OnSleep() =
@@ -93,28 +86,17 @@ type App() as app =
         let json =
             Newtonsoft.Json.JsonConvert.SerializeObject(runner.CurrentModel)
 
-        Console.WriteLine("OnSleep: saving model into app.Properties, json = {0}", json)
-
         app.Properties.[modelId] <- json
 
     override __.OnResume() =
-        Console.WriteLine "OnResume: checking for model in app.Properties"
         try
             match app.Properties.TryGetValue modelId with
             | true, (:? string as json) ->
-
-                Console.WriteLine("OnResume: restoring model from app.Properties, json = {0}", json)
-
                 let model =
                     Newtonsoft.Json.JsonConvert.DeserializeObject<App.Model>(json)
 
-                Console.WriteLine("OnResume: restoring model from app.Properties, model = {0}", (sprintf "%0A" model))
                 runner.SetCurrentModel(model, Cmd.none)
-
             | _ -> ()
         with ex -> App.program.onError ("Error while restoring model found in app.Properties", ex)
 
-    override this.OnStart() =
-        Console.WriteLine "OnStart: using same logic as OnResume()"
-        this.OnResume()
-#endif
+    override this.OnStart() = this.OnResume()

@@ -1,4 +1,4 @@
-namespace Commutr_v2.Models
+namespace CommutrV2.Models
 
 type Vehicle =
     { Id: int

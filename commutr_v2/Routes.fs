@@ -1,6 +1,6 @@
-namespace Commutr_v2
+namespace CommutrV2
 
-open Commutr_v2.Views
+open CommutrV2.Views
 open Fabulous
 open Xamarin.Forms
 

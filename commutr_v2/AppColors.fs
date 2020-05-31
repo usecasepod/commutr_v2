@@ -1,4 +1,4 @@
-namespace Commutr_v2
+namespace CommutrV2
 
 open Xamarin.Forms
 

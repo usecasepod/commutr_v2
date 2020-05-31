@@ -8,7 +8,8 @@
   <ItemGroup>
     <Compile Include="AppColors.fs" />
     <Compile Include="Models/Vehicle.fs"/>
-    <Compile Include="Views/VehicleItem.fs" />
+    <Compile Include="Components/VehicleCell.fs" />
+    <Compile Include="Views/VehicleUpdate.fs" />
     <Compile Include="Views/VehicleListing.fs" />
     <Compile Include="Routes.fs" />
     <Compile Include="App.fs" />

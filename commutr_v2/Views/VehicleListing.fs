@@ -1,7 +1,8 @@
-namespace Commutr_v2.Views
+namespace CommutrV2.Views
 
-open Commutr_v2
-open Commutr_v2.Models
+open CommutrV2
+open CommutrV2.Models
+open CommutrV2.Components
 open Fabulous
 open Fabulous.XamarinForms
 open Xamarin.Forms
@@ -15,7 +16,7 @@ module VehicleListing =
     type Msg =
         | Inserting of bool
         | Remove of int
-        | Modified of int * VehicleItem.Msg
+        | Modified of int * VehicleCell.Msg
         | SelectVehicle of int
 
     let initModel: Model =
@@ -35,22 +36,22 @@ module VehicleListing =
                       |> List.filter (fun item -> item.Id <> id) }
         | Modified (pos, itemMessage) ->
             match itemMessage with
-            | VehicleItem.Msg.TogglePrimary isPrimary ->
+            | VehicleCell.Msg.TogglePrimary isPrimary ->
                 { model with
                       Vehicles =
                           model.Vehicles
                           |> List.mapi (fun i itemModel ->
                               if i = pos then
-                                  VehicleItem.update itemMessage itemModel
+                                  VehicleCell.update itemMessage itemModel
                               else
                                   (if isPrimary && itemModel.IsPrimary
-                                   then VehicleItem.update (VehicleItem.TogglePrimary(false)) itemModel
+                                   then VehicleCell.update (VehicleCell.TogglePrimary(false)) itemModel
                                    else itemModel)) }
         | SelectVehicle pos ->
             { model with
                   SelectedVehicle = Some(model.Vehicles.Item(pos)) }
 
-    let view (model: Model) dispatch =
+    let view model dispatch =
         let items =
             model.Vehicles
             |> List.mapi (fun pos itemModel ->
@@ -76,8 +77,8 @@ module VehicleListing =
                                       command =
                                           fun () ->
                                               dispatch
-                                                  (Modified(pos, VehicleItem.TogglePrimary(not itemModel.IsPrimary)))) ]),
-                     content = VehicleItem.view itemModel (fun msg -> dispatch (Modified(pos, msg)))))
+                                                  (Modified(pos, VehicleCell.TogglePrimary(not itemModel.IsPrimary)))) ]),
+                     content = VehicleCell.view itemModel (fun msg -> dispatch (Modified(pos, msg)))))
 
         View.CollectionView
             (items,

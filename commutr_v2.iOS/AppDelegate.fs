@@ -1,5 +1,5 @@
 ﻿// Copyright 2018 Fabulous contributors. See LICENSE.md for license.
-namespace commutr_v2.iOS
+namespace CommutrV2.iOS
 
 open System
 open UIKit
@@ -14,7 +14,7 @@ type AppDelegate() =
     override this.FinishedLaunching(app, options) =
         Forms.SetFlags("SwipeView_Experimental")
         Forms.Init()
-        let appcore = new commutr_v2.App()
+        let appcore = new CommutrV2.App()
         this.LoadApplication(appcore)
         base.FinishedLaunching(app, options)
 

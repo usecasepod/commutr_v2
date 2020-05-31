@@ -1,13 +1,13 @@
-namespace Commutr_v2.Views
+namespace CommutrV2.Components
 
-open Commutr_v2
-open Commutr_v2.Models
+open CommutrV2
+open CommutrV2.Models
 open Fabulous.XamarinForms
 open Fabulous.XamarinForms.SkiaSharp
 open SkiaSharp.Views.Forms
 open Xamarin.Forms
 
-module VehicleItem =
+module VehicleCell =
     type Msg = TogglePrimary of bool
 
     let init (initModel: Vehicle) = initModel
