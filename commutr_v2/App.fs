@@ -18,8 +18,26 @@ module App =
     let initModel = { Vehicles = VehicleListing.init () }
 
     let init () =
-        Routing.RegisterRoute("vehicles", typeof<VehiclePage>)
+        Routing.RegisterRoute("vehicle", typeof<VehicleUpdatePage>)
         initModel, Cmd.none
+
+    let navigate route queryId param =
+        match shellRef.TryValue with
+        | None -> ()
+        | Some shell ->
+            let route =
+                ShellNavigationState.op_Implicit (sprintf "%s?%s=%s" route queryId param)
+
+            async {
+                // Selecting an item in SearchHandler and immediately asking for navigation doesn't work on iOS.
+                // This is a bug in Xamarin.Forms (https://github.com/xamarin/Xamarin.Forms/issues/5713)
+                // The workaround is to wait for the fade out animation of SearchHandler to finish
+                if Device.RuntimePlatform = Device.iOS then do! Async.Sleep 1000
+
+                shell.FlyoutIsPresented <- false
+                do! shell.GoToAsync route |> Async.AwaitTask
+            }
+            |> Async.StartImmediate
 
     let update msg model =
         match msg with
@@ -45,7 +63,7 @@ module App =
                           [ View.Label
                               (text = "Welcome to Commutr!",
                                textColor = AppColors.cinereousMediumDark,
-                               fontSize = FontSize.Named(NamedSize.Large),
+                               fontSize = Named(NamedSize.Large),
                                horizontalTextAlignment = TextAlignment.Center) ]),
              items =
                  [ View.FlyoutItem

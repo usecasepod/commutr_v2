@@ -25,6 +25,12 @@ module VehicleUpdate =
         | UpdateModel m -> { model with Model = m }
         | UpdateYear year -> { model with Year = year }
         | UpdateIsPrimary isPrimary -> { model with IsPrimary = isPrimary }
-        | SaveVehicle -> model //TODO: add to vehicle listing and navigate
+        | SaveVehicle -> model //TODO: add to vehicle listing and navigate? (This is gonna be interesting)
 
-    let view model dispatch = View.StackLayout //TODO: display edit components
+    let view model =
+        let label =
+            match model.Id with
+            | 0 -> View.Label(text = "Create a new vehicle")
+            | _ -> View.Label(text = "Edit this vehicle")
+
+        View.StackLayout(children = [ label ]) //TODO: display edit components
