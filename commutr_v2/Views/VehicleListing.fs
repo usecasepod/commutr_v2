@@ -14,7 +14,7 @@ module VehicleListing =
           IsInserting: bool }
 
     type Msg =
-        | Inserting of bool
+        | AddNew
         | Remove of int
         | Modified of int * VehicleCell.Msg
         | SelectVehicle of int
@@ -28,7 +28,7 @@ module VehicleListing =
 
     let update msg model =
         match msg with
-        | Inserting isInserting -> { model with IsInserting = isInserting } //TODO: Make this do something
+        | AddNew -> model //TODO: Make this do something
         | Remove id ->
             { model with
                   Vehicles =
@@ -96,4 +96,5 @@ module VehicleListing =
                             View.Button
                                 (text = "Add a Vehicle",
                                  backgroundColor = AppColors.cinereous,
-                                 textColor = AppColors.ghostWhite) ]))
+                                 textColor = AppColors.ghostWhite,
+                                 command = fun () -> dispatch AddNew) ]))

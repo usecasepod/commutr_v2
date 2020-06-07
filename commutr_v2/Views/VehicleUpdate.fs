@@ -17,20 +17,42 @@ module VehicleUpdate =
         | UpdateIsPrimary of bool
         | SaveVehicle
 
-    let init initModel = initModel
+    let init =
+        { Vehicle =
+              { Id = 0
+                Make = ""
+                Model = ""
+                Year = 0
+                IsPrimary = false } }
 
     let update msg model =
         match msg with
-        | UpdateMake make -> { model with Make = make }
-        | UpdateModel m -> { model with Model = m }
-        | UpdateYear year -> { model with Year = year }
-        | UpdateIsPrimary isPrimary -> { model with IsPrimary = isPrimary }
+        | UpdateMake make ->
+            { model with
+                  Vehicle = { model.Vehicle with Make = make } }
+        | UpdateModel m ->
+            { model with
+                  Vehicle = { model.Vehicle with Model = m } }
+        | UpdateYear year ->
+            { model with
+                  Vehicle = { model.Vehicle with Year = year } }
+        | UpdateIsPrimary isPrimary ->
+            { model with
+                  Vehicle =
+                      { model.Vehicle with
+                            IsPrimary = isPrimary } }
         | SaveVehicle -> model //TODO: add to vehicle listing and navigate? (This is gonna be interesting)
 
-    let view model =
+    let view model dispatch =
         let label =
-            match model.Id with
+            match model.Vehicle.Id with
             | 0 -> View.Label(text = "Create a new vehicle")
             | _ -> View.Label(text = "Edit this vehicle")
 
-        View.StackLayout(children = [ label ]) //TODO: display edit components
+        View.StackLayout
+            (children =
+                [ label
+                  View.Entry
+                      (placeholder = "Make",
+                       text = model.Vehicle.Make,
+                       textChanged = fun e -> e.NewTextValue |> (UpdateMake >> dispatch)) ]) //TODO: display edit components

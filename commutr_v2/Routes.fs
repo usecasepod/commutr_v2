@@ -8,24 +8,29 @@ open Fabulous
 open Xamarin.Forms
 
 [<QueryProperty("Vehicle", "vehicle")>]
-type VehicleUpdatePage(view: VehicleUpdate.Model -> ViewElement) =
+type VehicleUpdatePage() =
     inherit ContentPage()
 
     let mutable _prevViewElement = None
 
-    let mutable _vehicle =
-        { Id = 0
-          Make = ""
-          Model = ""
-          Year = 0
-          IsPrimary = false }
+    let mutable _vehicle = ""
 
     member this.Vehicle
         with get () = _vehicle
-        and set (value: Vehicle) = _vehicle <- value
+        and set (value) =
+            _vehicle <- value
+            this.Refresh()
 
     member this.Refresh() =
-        let viewElement = VehicleUpdate.view _vehicle
+        let model =
+            match _vehicle with
+            | null
+            | "" -> VehicleUpdate.init
+            | vehStr -> { Vehicle = vehStr |> JsonConvert.DeserializeObject<Vehicle> }
+
+        let viewElement =
+            VehicleUpdate.view model (fun msg -> VehicleUpdate.update)
+
         match _prevViewElement with
         | None -> this.Content <- viewElement.Create() :?> View
         | Some prevViewElement -> viewElement.UpdateIncremental(prevViewElement, this.Content)

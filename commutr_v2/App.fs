@@ -6,27 +6,36 @@ open System.Diagnostics
 open Fabulous
 open Fabulous.XamarinForms
 open Fabulous.XamarinForms.LiveUpdate
+open Newtonsoft.Json
+open CommutrV2.Models
 open Xamarin.Forms
 
 module App =
-    type Model = { Vehicles: VehicleListing.Model }
+    type Model =
+        { VehicleListPageModel: VehicleListing.Model }
 
     type Msg = VehicleListUpdated of VehicleListing.Msg
 
+    type CmdMsg = CreateOrUpdateVehicle of Vehicle option
+
     let shellRef = ViewRef<Shell>()
 
-    let initModel = { Vehicles = VehicleListing.init () }
+    let initModel =
+        { VehicleListPageModel = VehicleListing.init () }
 
     let init () =
         Routing.RegisterRoute("vehicle", typeof<VehicleUpdatePage>)
-        initModel, Cmd.none
+        initModel, []
 
     let navigate route queryId param =
         match shellRef.TryValue with
         | None -> ()
         | Some shell ->
             let route =
-                ShellNavigationState.op_Implicit (sprintf "%s?%s=%s" route queryId param)
+                match param with
+                | None -> ShellNavigationState.op_Implicit (sprintf "%s?%s=" route queryId)
+                | Some paramStr -> ShellNavigationState.op_Implicit (sprintf "%s?%s=%s" route queryId paramStr)
+
 
             async {
                 // Selecting an item in SearchHandler and immediately asking for navigation doesn't work on iOS.
@@ -39,16 +48,28 @@ module App =
             }
             |> Async.StartImmediate
 
+        []
+
+    let mapCmdMsgToCmd cmdMsg =
+        let navigateToVehicle = navigate "vehicle" "vehicle"
+        match cmdMsg with
+        | CreateOrUpdateVehicle vehicle ->
+            match vehicle with
+            | Some veh -> navigateToVehicle (Some(veh |> JsonConvert.SerializeObject))
+            | None -> navigateToVehicle None
+
     let update msg model =
         match msg with
         | VehicleListUpdated listMsg ->
             { model with
-                  Vehicles = VehicleListing.update listMsg model.Vehicles },
-            Cmd.none
+                  VehicleListPageModel = VehicleListing.update listMsg model.VehicleListPageModel },
+            match listMsg with
+            | VehicleListing.AddNew -> [ CreateOrUpdateVehicle None ]
+            | _ -> []
 
     let view model dispatch =
         let vehicleList =
-            VehicleListing.view model.Vehicles (VehicleListUpdated >> dispatch)
+            VehicleListing.view model.VehicleListPageModel (VehicleListUpdated >> dispatch)
 
         View.Shell
             (ref = shellRef,
@@ -76,7 +97,7 @@ module App =
 
     // Note, this declaration is needed if you enable LiveUpdate
     let program =
-        XamarinFormsProgram.mkProgram init update view
+        XamarinFormsProgram.mkProgramWithCmdMsg init update view mapCmdMsgToCmd
 
 type App() as app =
     inherit Application()
