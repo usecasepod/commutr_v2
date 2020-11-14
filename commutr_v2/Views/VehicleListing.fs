@@ -13,11 +13,16 @@ module VehicleListing =
           SelectedVehicle: Option<Vehicle>
           IsInserting: bool }
 
+    type ExternalMsg =
+        | NoOp
+        | NavigateToAdd
+        | NavigateToUpdate of Vehicle
+
     type Msg =
-        | AddNew
-        | Remove of int
-        | Modified of int * VehicleCell.Msg
-        | SelectVehicle of int
+        | VehicleAdded of Vehicle
+        | NewVehicleTapped
+        | VehicleRemoved of Vehicle
+        | VehicleModified of Vehicle
 
     let initModel: Model =
         { Vehicles = []
@@ -26,35 +31,30 @@ module VehicleListing =
 
     let init () = initModel
 
+    let updateVehicles model vehicles =
+        let m = { model with Vehicles = vehicles }
+        m, Cmd.none, ExternalMsg.NoOp
+
     let update msg model =
+        let addVehicle = fun v vehicles -> v :: vehicles
+        let removeVehicle = fun (v: Vehicle) (vehicles: Vehicle list) -> vehicles |> List.filter (fun item -> item.Id = v.Id)
         match msg with
-        | AddNew -> model //TODO: Make this do something
-        | Remove id ->
-            { model with
-                  Vehicles =
-                      model.Vehicles
-                      |> List.filter (fun item -> item.Id <> id) }
-        | Modified (pos, itemMessage) ->
-            match itemMessage with
-            | VehicleCell.Msg.TogglePrimary isPrimary ->
-                { model with
-                      Vehicles =
-                          model.Vehicles
-                          |> List.mapi (fun i itemModel ->
-                              if i = pos then
-                                  VehicleCell.update itemMessage itemModel
-                              else
-                                  (if isPrimary && itemModel.IsPrimary
-                                   then VehicleCell.update (VehicleCell.TogglePrimary(false)) itemModel
-                                   else itemModel)) }
-        | SelectVehicle pos ->
-            { model with
-                  SelectedVehicle = Some(model.Vehicles.Item(pos)) }
+        | VehicleAdded vehicle ->
+            let updatedVehicles = addVehicle vehicle model.Vehicles
+            updateVehicles model updatedVehicles
+        | VehicleRemoved vehicle ->
+            let updatedVehicles = removeVehicle vehicle model.Vehicles
+            updateVehicles model updatedVehicles
+        | VehicleModified vehicle ->
+            let updatedVehicles = addVehicle vehicle (removeVehicle vehicle model.Vehicles)
+            updateVehicles model updatedVehicles
+        | NewVehicleTapped ->
+            model, Cmd.none, ExternalMsg.NavigateToAdd
 
     let view model dispatch =
         let items =
             model.Vehicles
-            |> List.mapi (fun pos itemModel ->
+            |> List.map (fun itemModel ->
                 View.SwipeView
                     (backgroundColor = AppColors.silverSandLight,
                      rightItems =
@@ -63,7 +63,7 @@ module VehicleListing =
                                  [ View.SwipeItem
                                      (text = "Delete",
                                       backgroundColor = Color.Red,
-                                      command = fun () -> dispatch (Remove itemModel.Id)) ]),
+                                      command = fun () -> dispatch (VehicleRemoved itemModel)) ]),
                      leftItems =
                          View.SwipeItems
                              (items =
@@ -77,24 +77,25 @@ module VehicleListing =
                                       command =
                                           fun () ->
                                               dispatch
-                                                  (Modified(pos, VehicleCell.TogglePrimary(not itemModel.IsPrimary)))) ]),
-                     content = VehicleCell.view itemModel (fun msg -> dispatch (Modified(pos, msg)))))
+                                                  (VehicleModified { itemModel with IsPrimary = not itemModel.IsPrimary})) ]),
+                     content = VehicleCell.view itemModel))
 
-        View.CollectionView
-            (items,
-             emptyView =
-                 View.StackLayout
-                     (spacing = 5.0,
-                      backgroundColor = AppColors.silverSandLight,
-                      padding = Thickness 25.0,
-                      children =
-                          [ View.Label
-                              (text = "You don't have any vehicles!",
-                               horizontalTextAlignment = TextAlignment.Center,
-                               verticalTextAlignment = TextAlignment.Center,
-                               textColor = AppColors.cinereousMediumDark)
-                            View.Button
-                                (text = "Add a Vehicle",
-                                 backgroundColor = AppColors.cinereous,
-                                 textColor = AppColors.ghostWhite,
-                                 command = fun () -> dispatch AddNew) ]))
+        View.ContentPage
+            (View.CollectionView
+                (items,
+                 emptyView =
+                     View.StackLayout
+                         (spacing = 5.0,
+                          backgroundColor = AppColors.silverSandLight,
+                          padding = Thickness 25.0,
+                          children =
+                              [ View.Label
+                                  (text = "You don't have any vehicles!",
+                                   horizontalTextAlignment = TextAlignment.Center,
+                                   verticalTextAlignment = TextAlignment.Center,
+                                   textColor = AppColors.cinereousMediumDark)
+                                View.Button
+                                    (text = "Add a Vehicle",
+                                     backgroundColor = AppColors.cinereous,
+                                     textColor = AppColors.ghostWhite,
+                                     command = fun () -> dispatch NewVehicleTapped) ])))

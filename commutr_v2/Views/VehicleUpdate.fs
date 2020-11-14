@@ -17,13 +17,21 @@ module VehicleUpdate =
         | UpdateIsPrimary of bool
         | SaveVehicle
 
-    let init =
+    let initModel:Model =
         { Vehicle =
-              { Id = 0
-                Make = ""
-                Model = ""
-                Year = 0
-                IsPrimary = false } }
+            { Id = 0
+              Make = ""
+              Model = ""
+              Year = 0
+              IsPrimary = false } }
+
+    let init (vehicle: Vehicle option) = 
+        let model =
+            match vehicle with
+            | Some v -> { Vehicle = v}
+            | None -> initModel
+
+        model, Cmd.none
 
     let update msg model =
         match msg with
@@ -49,10 +57,11 @@ module VehicleUpdate =
             | 0 -> View.Label(text = "Create a new vehicle")
             | _ -> View.Label(text = "Edit this vehicle")
 
-        View.StackLayout
-            (children =
-                [ label
-                  View.Entry
-                      (placeholder = "Make",
-                       text = model.Vehicle.Make,
-                       textChanged = fun e -> e.NewTextValue |> (UpdateMake >> dispatch)) ]) //TODO: display edit components
+        View.ContentPage
+            (View.StackLayout
+                (children =
+                    [ label
+                      View.Entry
+                          (placeholder = "Make",
+                           text = model.Vehicle.Make,
+                           textChanged = fun e -> e.NewTextValue |> (UpdateMake >> dispatch)) ])) //TODO: display edit components

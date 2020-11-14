@@ -2,7 +2,6 @@
 namespace CommutrV2
 
 open CommutrV2.Views
-open System.Diagnostics
 open Fabulous
 open Fabulous.XamarinForms
 open Fabulous.XamarinForms.LiveUpdate
@@ -11,93 +10,84 @@ open CommutrV2.Models
 open Xamarin.Forms
 
 module App =
+    type Msg =
+        | VehicleListingMsg of VehicleListing.Msg
+        | VehicleUpdateMsg of VehicleUpdate.Msg
+        | GoToUpdateVehicle of Vehicle option
+    
     type Model =
-        { VehicleListPageModel: VehicleListing.Model }
+        { VehicleListPageModel: VehicleListing.Model
+          VehicleUpdatePageModel: VehicleUpdate.Model option
 
-    type Msg = VehicleListUpdated of VehicleListing.Msg
+          // Workaround Cmd limitation -- Can not pop a page in page stack and send Cmd at the same time
+          // Otherwise it would pop pages 2 times in NavigationPage
+          WorkaroundNavPageBug: bool
+          WorkaroundNavPageBugPendingCmd: Cmd<Msg> }
 
-    type CmdMsg = CreateOrUpdateVehicle of Vehicle option
-
-    let shellRef = ViewRef<Shell>()
+    type Pages =
+        { VehicleListing: ViewElement
+          VehicleUpdate: ViewElement option }
 
     let initModel =
-        { VehicleListPageModel = VehicleListing.init () }
+        { VehicleListPageModel = VehicleListing.init ()
+          VehicleUpdatePageModel = None
+          WorkaroundNavPageBug = false
+          WorkaroundNavPageBugPendingCmd = Cmd.none }
 
-    let init () =
-        Routing.RegisterRoute("vehicle", typeof<VehicleUpdatePage>)
-        initModel, []
+    let init () = initModel, []
 
-    let navigate route queryId param =
-        match shellRef.TryValue with
-        | None -> ()
-        | Some shell ->
-            let route =
-                match param with
-                | None -> ShellNavigationState.op_Implicit (sprintf "%s?%s=" route queryId)
-                | Some paramStr -> ShellNavigationState.op_Implicit (sprintf "%s?%s=%s" route queryId paramStr)
+    let handleVehicleListExternalMsg externalMsg =
+        match externalMsg with
+        | VehicleListing.ExternalMsg.NoOp -> Cmd.none
+        | VehicleListing.ExternalMsg.NavigateToAdd -> Cmd.ofMsg (Msg.GoToUpdateVehicle None)
+        | VehicleListing.ExternalMsg.NavigateToUpdate veh -> Cmd.ofMsg (Msg.GoToUpdateVehicle (Some veh))
 
+    let navigationMapper (model : Model) =
+        let editModel = model.VehicleUpdatePageModel
+        match editModel with
+        | None -> model
+        | Some _ -> { model with VehicleUpdatePageModel = None }
 
-            async {
-                // Selecting an item in SearchHandler and immediately asking for navigation doesn't work on iOS.
-                // This is a bug in Xamarin.Forms (https://github.com/xamarin/Xamarin.Forms/issues/5713)
-                // The workaround is to wait for the fade out animation of SearchHandler to finish
-                if Device.RuntimePlatform = Device.iOS then do! Async.Sleep 1000
-
-                shell.FlyoutIsPresented <- false
-                do! shell.GoToAsync route |> Async.AwaitTask
-            }
-            |> Async.StartImmediate
-
-        []
-
-    let mapCmdMsgToCmd cmdMsg =
-        let navigateToVehicle = navigate "vehicle" "vehicle"
-        match cmdMsg with
-        | CreateOrUpdateVehicle vehicle ->
-            match vehicle with
-            | Some veh -> navigateToVehicle (Some(veh |> JsonConvert.SerializeObject))
-            | None -> navigateToVehicle None
-
-    let update msg model =
+    let update msg (model : Model) =
         match msg with
-        | VehicleListUpdated listMsg ->
-            { model with
-                  VehicleListPageModel = VehicleListing.update listMsg model.VehicleListPageModel },
-            match listMsg with
-            | VehicleListing.AddNew -> [ CreateOrUpdateVehicle None ]
-            | _ -> []
+        | VehicleListingMsg msg ->
+            let m, cmd, externalMsg = VehicleListing.update msg model.VehicleListPageModel
+            let externalCmd = handleVehicleListExternalMsg externalMsg
+            let batchCmd = Cmd.batch [ (Cmd.map VehicleListingMsg cmd); externalCmd]
+            { model with VehicleListPageModel = m}, batchCmd
+        | GoToUpdateVehicle vehicle ->
+            let m, cmd = VehicleUpdate.init vehicle
+            { model with VehicleUpdatePageModel = Some m}, (Cmd.map VehicleUpdateMsg cmd)
+        | _ -> model, Cmd.none
+
+    let getPages allPages =
+        let vehicleListing = allPages.VehicleListing
+        let vehicleUpdate = allPages.VehicleUpdate
+
+        match vehicleUpdate with
+        | None -> [vehicleListing]
+        | Some update -> [vehicleListing; update]
 
     let view model dispatch =
-        let vehicleList =
-            VehicleListing.view model.VehicleListPageModel (VehicleListUpdated >> dispatch)
+        let listingPage = VehicleListing.view model.VehicleListPageModel (VehicleListingMsg >> dispatch)
 
-        View.Shell
-            (ref = shellRef,
-             flyoutBackgroundColor = AppColors.silverSand,
-             shellForegroundColor = AppColors.cinereousMediumDark,
-             shellBackgroundColor = AppColors.silverSand,
-             flyoutHeader =
-                 View.StackLayout
-                     (margin = Thickness(25.0, 75.0, 25.0, 25.0),
-                      padding = Thickness 50.0,
-                      children =
-                          [ View.Label
-                              (text = "Welcome to Commutr!",
-                               textColor = AppColors.cinereousMediumDark,
-                               fontSize = Named(NamedSize.Large),
-                               horizontalTextAlignment = TextAlignment.Center) ]),
-             items =
-                 [ View.FlyoutItem
-                     (title = "Vehicles",
-                      route = "vehicles",
-                      items =
-                          [ View.ShellContent
-                              (content =
-                                  View.ContentPage(backgroundColor = AppColors.silverSandLight, content = vehicleList)) ]) ])
+        let updatePage =
+            model.VehicleUpdatePageModel
+            |> Option.map (fun updateModel -> VehicleUpdate.view updateModel (VehicleUpdateMsg >> dispatch))
+
+        let allPages =
+            { VehicleListing = listingPage
+              VehicleUpdate = updatePage }
+
+        View.NavigationPage
+            (barBackgroundColor = AppColors.cinereousMediumDark,
+             barTextColor = AppColors.silverSand,
+             backgroundColor = AppColors.silverSand,
+             pages = getPages allPages)
 
     // Note, this declaration is needed if you enable LiveUpdate
     let program =
-        XamarinFormsProgram.mkProgramWithCmdMsg init update view mapCmdMsgToCmd
+        XamarinFormsProgram.mkProgram init update view
 
 type App() as app =
     inherit Application()

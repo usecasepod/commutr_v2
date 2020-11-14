@@ -8,15 +8,9 @@ open SkiaSharp.Views.Forms
 open Xamarin.Forms
 
 module VehicleCell =
-    type Msg = TogglePrimary of bool
-
     let init (initModel: Vehicle) = initModel
 
-    let update msg model =
-        match msg with
-        | TogglePrimary isPrimary -> { model with IsPrimary = isPrimary }
-
-    let view (vehicle) dispatch =
+    let view (vehicle) =
         View.StackLayout
             (padding = Thickness 5.0,
              children =
