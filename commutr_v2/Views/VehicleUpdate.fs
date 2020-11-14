@@ -2,10 +2,9 @@ namespace CommutrV2.Views
 
 open CommutrV2
 open CommutrV2.Models
-open CommutrV2.Components
 open Fabulous
 open Fabulous.XamarinForms
-open Xamarin.Forms
+open System
 
 module VehicleUpdate =
     type Model = { Vehicle: Vehicle }
@@ -24,7 +23,7 @@ module VehicleUpdate =
 
     let initModel:Model =
         { Vehicle =
-            { Id = 0
+            { Id = Guid.Empty
               Make = ""
               Model = ""
               Year = 0
@@ -41,8 +40,10 @@ module VehicleUpdate =
     let createOrUpdateVehicle model =
         //TODO: eventually this will be responsible for persisting
         match model.Vehicle.Id with
-        | 0 -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleAdded
-        | _ -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleUpdated
+        | id when id = Guid.Empty ->
+            let modelWithId = { model with Vehicle = { model.Vehicle with Id = Guid.NewGuid() }}
+            modelWithId, Cmd.none, ExternalMsg.GoBackAfterVehicleAdded modelWithId.Vehicle
+        | _ -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleUpdated model.Vehicle
 
     let update msg model =
         match msg with
@@ -63,7 +64,7 @@ module VehicleUpdate =
     let view model dispatch =
         let label =
             match model.Vehicle.Id with
-            | 0 -> View.Label(text = "Create a new vehicle")
+            | id when id = Guid.Empty -> View.Label(text = "Create a new vehicle")
             | _ -> View.Label(text = "Edit this vehicle")
 
         View.ContentPage

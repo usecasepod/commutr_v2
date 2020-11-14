@@ -83,6 +83,9 @@ module App =
                 newModel, model.WorkaroundNavPageBugPendingCmd
             | false ->
                 navigationMapper model, Cmd.none
+        | UpdateWhenVehicleAdded vehicle ->
+            let listMsg = Cmd.ofMsg (VehicleListingMsg (VehicleListing.Msg.VehicleAdded vehicle))
+            { model with VehicleUpdatePageModel = None }, listMsg
 
     let getPages allPages =
         let vehicleListing = allPages.VehicleListing

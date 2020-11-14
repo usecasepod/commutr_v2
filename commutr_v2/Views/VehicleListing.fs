@@ -37,7 +37,7 @@ module VehicleListing =
 
     let update msg model =
         let addVehicle = fun v vehicles -> v :: vehicles
-        let removeVehicle = fun (v: Vehicle) (vehicles: Vehicle list) -> vehicles |> List.filter (fun item -> item.Id = v.Id)
+        let removeVehicle = fun (v: Vehicle) (vehicles: Vehicle list) -> vehicles |> List.filter (fun item -> item.Id <> v.Id)
         match msg with
         | VehicleAdded vehicle ->
             let updatedVehicles = addVehicle vehicle model.Vehicles
