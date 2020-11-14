@@ -10,6 +10,11 @@ open Xamarin.Forms
 module VehicleUpdate =
     type Model = { Vehicle: Vehicle }
 
+    type ExternalMsg =
+        | NoOp
+        | GoBackAfterVehicleAdded of Vehicle
+        | GoBackAfterVehicleUpdated of Vehicle
+
     type Msg =
         | UpdateMake of string
         | UpdateModel of string
@@ -33,23 +38,27 @@ module VehicleUpdate =
 
         model, Cmd.none
 
+    let createOrUpdateVehicle model =
+        //TODO: eventually this will be responsible for persisting
+        match model.Vehicle.Id with
+        | 0 -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleAdded
+        | _ -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleUpdated
+
     let update msg model =
         match msg with
         | UpdateMake make ->
-            { model with
-                  Vehicle = { model.Vehicle with Make = make } }
-        | UpdateModel m ->
-            { model with
-                  Vehicle = { model.Vehicle with Model = m } }
+            let m = { model with Vehicle = { model.Vehicle with Make = make } }
+            m, Cmd.none, ExternalMsg.NoOp
+        | UpdateModel vModel ->
+            let m = { model with Vehicle = { model.Vehicle with Model = vModel } }
+            m, Cmd.none, ExternalMsg.NoOp
         | UpdateYear year ->
-            { model with
-                  Vehicle = { model.Vehicle with Year = year } }
+            let m = { model with Vehicle = { model.Vehicle with Year = year } }
+            m, Cmd.none, ExternalMsg.NoOp
         | UpdateIsPrimary isPrimary ->
-            { model with
-                  Vehicle =
-                      { model.Vehicle with
-                            IsPrimary = isPrimary } }
-        | SaveVehicle -> model //TODO: add to vehicle listing and navigate? (This is gonna be interesting)
+            let m = { model with Vehicle = { model.Vehicle with IsPrimary = isPrimary } }
+            m, Cmd.none, ExternalMsg.NoOp
+        | SaveVehicle -> createOrUpdateVehicle model //TODO: add to vehicle listing and navigate? (This is gonna be interesting)
 
     let view model dispatch =
         let label =
@@ -64,4 +73,9 @@ module VehicleUpdate =
                       View.Entry
                           (placeholder = "Make",
                            text = model.Vehicle.Make,
-                           textChanged = fun e -> e.NewTextValue |> (UpdateMake >> dispatch)) ])) //TODO: display edit components
+                           textChanged = fun e -> e.NewTextValue |> (UpdateMake >> dispatch))
+                      View.Button
+                          (text = "Add Vehicle",
+                           backgroundColor = AppColors.cinereous,
+                           textColor = AppColors.ghostWhite,
+                           command = fun () -> dispatch SaveVehicle)]))

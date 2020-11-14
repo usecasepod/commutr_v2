@@ -14,6 +14,9 @@ module App =
         | VehicleListingMsg of VehicleListing.Msg
         | VehicleUpdateMsg of VehicleUpdate.Msg
         | GoToUpdateVehicle of Vehicle option
+        | UpdateWhenVehicleAdded of Vehicle
+        | UpdateWhenVehicleUpdated of Vehicle
+        | NavigationPopped
     
     type Model =
         { VehicleListPageModel: VehicleListing.Model
@@ -42,6 +45,12 @@ module App =
         | VehicleListing.ExternalMsg.NavigateToAdd -> Cmd.ofMsg (Msg.GoToUpdateVehicle None)
         | VehicleListing.ExternalMsg.NavigateToUpdate veh -> Cmd.ofMsg (Msg.GoToUpdateVehicle (Some veh))
 
+    let handleVehicleUpdateExternalMsg externalMsg =
+        match externalMsg with
+        | VehicleUpdate.ExternalMsg.NoOp -> Cmd.none
+        | VehicleUpdate.ExternalMsg.GoBackAfterVehicleAdded vehicle -> Cmd.ofMsg (UpdateWhenVehicleAdded vehicle)
+        | VehicleUpdate.ExternalMsg.GoBackAfterVehicleUpdated vehicle -> Cmd.ofMsg (UpdateWhenVehicleUpdated vehicle)
+
     let navigationMapper (model : Model) =
         let editModel = model.VehicleUpdatePageModel
         match editModel with
@@ -49,16 +58,31 @@ module App =
         | Some _ -> { model with VehicleUpdatePageModel = None }
 
     let update msg (model : Model) =
+        //TODO: handle "update when" events
         match msg with
         | VehicleListingMsg msg ->
             let m, cmd, externalMsg = VehicleListing.update msg model.VehicleListPageModel
             let externalCmd = handleVehicleListExternalMsg externalMsg
             let batchCmd = Cmd.batch [ (Cmd.map VehicleListingMsg cmd); externalCmd]
             { model with VehicleListPageModel = m}, batchCmd
+        | VehicleUpdateMsg msg ->
+            let m, cmd, externalMsg = VehicleUpdate.update msg model.VehicleUpdatePageModel.Value
+            let externalCmd = handleVehicleUpdateExternalMsg externalMsg
+            let batchCmd = Cmd.batch [ (Cmd.map VehicleUpdateMsg cmd); externalCmd]
+            { model with VehicleUpdatePageModel = Some m }, batchCmd 
         | GoToUpdateVehicle vehicle ->
             let m, cmd = VehicleUpdate.init vehicle
             { model with VehicleUpdatePageModel = Some m}, (Cmd.map VehicleUpdateMsg cmd)
-        | _ -> model, Cmd.none
+        | NavigationPopped ->
+            match model.WorkaroundNavPageBug with
+            | true ->
+                //Do not pop pages if already done manually
+                let newModel = { model with
+                                    WorkaroundNavPageBug = false
+                                    WorkaroundNavPageBugPendingCmd = Cmd.none }
+                newModel, model.WorkaroundNavPageBugPendingCmd
+            | false ->
+                navigationMapper model, Cmd.none
 
     let getPages allPages =
         let vehicleListing = allPages.VehicleListing
@@ -83,6 +107,7 @@ module App =
             (barBackgroundColor = AppColors.cinereousMediumDark,
              barTextColor = AppColors.silverSand,
              backgroundColor = AppColors.silverSand,
+             popped = (fun _ -> dispatch NavigationPopped),
              pages = getPages allPages)
 
     // Note, this declaration is needed if you enable LiveUpdate
