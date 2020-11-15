@@ -7,4 +7,6 @@ type Vehicle =
       Make: string
       Model: string
       Year: int
+      Odometer: decimal
+      Notes: string
       IsPrimary: bool }

@@ -13,17 +13,17 @@ module VehicleUpdate =
 
     type ExternalMsg =
         | NoOp
-        | GoBackAfterVehicleAdded of Vehicle
-        | GoBackAfterVehicleUpdated of Vehicle
+        | GoBackAfterVehicleSaved
 
     type Msg =
         | UpdateMake of string
         | UpdateModel of string
         | UpdateYear of int
+        | UpdateOdometer of decimal
+        | UpdateNotes of string
         | UpdateIsPrimary of bool
         | SaveVehicle
-        | VehicleAdded of Vehicle
-        | VehicleUpdated of Vehicle
+        | VehicleSaved
 
     let initModel:Model =
         { Vehicle =
@@ -31,6 +31,8 @@ module VehicleUpdate =
               Make = ""
               Model = ""
               Year = 0
+              Odometer = 0m
+              Notes = ""
               IsPrimary = false } }
 
     let init (vehicle: Vehicle option) = 
@@ -44,9 +46,11 @@ module VehicleUpdate =
     let createOrUpdateVehicleAsync model = async {
         match model.Vehicle.Id with
         | 0 ->
-            let! insertedVehicle = insertVehicle model.Vehicle
-            return VehicleAdded insertedVehicle
-        | _ -> return VehicleUpdated model.Vehicle //TODO: persist modifications (i.e. update record)
+            do! insertVehicle model.Vehicle |> Async.Ignore
+            return VehicleSaved
+        | _ ->
+            do! updateVehicle model.Vehicle |> Async.Ignore
+            return VehicleSaved
     }
 
     let update msg model =
@@ -60,16 +64,20 @@ module VehicleUpdate =
         | UpdateYear year ->
             let m = { model with Vehicle = { model.Vehicle with Year = year } }
             m, Cmd.none, ExternalMsg.NoOp
+        | UpdateOdometer odometer ->
+            let m = { model with Vehicle = { model.Vehicle with Odometer = odometer } }
+            m, Cmd.none, ExternalMsg.NoOp
+        | UpdateNotes notes ->
+            let m = { model with Vehicle = { model.Vehicle with Notes = notes } }
+            m, Cmd.none, ExternalMsg.NoOp
         | UpdateIsPrimary isPrimary ->
             let m = { model with Vehicle = { model.Vehicle with IsPrimary = isPrimary } }
             m, Cmd.none, ExternalMsg.NoOp
         | SaveVehicle ->
             let cmd = Cmd.ofAsyncMsg (createOrUpdateVehicleAsync model)
             model, cmd, ExternalMsg.NoOp
-        | VehicleAdded vehicle ->
-            model, Cmd.none, ExternalMsg.GoBackAfterVehicleAdded vehicle
-        | VehicleUpdated vehicle ->
-            model, Cmd.none, ExternalMsg.GoBackAfterVehicleUpdated vehicle
+        | VehicleSaved ->
+            model, Cmd.none, ExternalMsg.GoBackAfterVehicleSaved
 
     let yearToString year =
         match year with
@@ -81,11 +89,21 @@ module VehicleUpdate =
         | "" -> 0
         | _ -> str |> int
 
+    let odometerToString o =
+       match o with
+       | 0m -> ""
+       | _ -> o.ToString()
+
+    let stringToOdometer str =
+        match str with
+        | "" -> 0m
+        | _ -> str |> decimal
+
     let view model dispatch =
         let titleText =
             match model.Vehicle.Id with
-            | 0 -> "Create a new vehicle"
-            | _ -> "Edit this vehicle"
+            | 0 -> "New Vehicle"
+            | _ -> sprintf "%i %s %s" model.Vehicle.Year model.Vehicle.Make model.Vehicle.Model
 
         View.ContentPage
             (View.StackLayout
@@ -118,6 +136,16 @@ module VehicleUpdate =
                            keyboard = Keyboard.Numeric,
                            clearButtonVisibility = ClearButtonVisibility.WhileEditing,
                            textChanged = fun e -> e.NewTextValue |> stringToYear |> (UpdateYear >> dispatch))
+                      View.Label
+                          (text = "Odometer",
+                           textColor = AppColors.cinereous,
+                           fontAttributes = FontAttributes.Bold)
+                      View.Entry
+                          (placeholder = "100000.00",
+                           text = odometerToString model.Vehicle.Odometer,
+                           keyboard = Keyboard.Numeric,
+                           clearButtonVisibility = ClearButtonVisibility.WhileEditing,
+                           textChanged = fun e -> e.NewTextValue |> stringToOdometer |> (UpdateOdometer >> dispatch))
                       View.StackLayout
                           (children =
                             [ View.Label
@@ -132,7 +160,7 @@ module VehicleUpdate =
                                  checkedChanged = fun e -> e.Value |> (UpdateIsPrimary >> dispatch))],
                            orientation = StackOrientation.Horizontal)
                       View.Button
-                          (text = "Add Vehicle",
+                          (text = "Save Vehicle",
                            backgroundColor = AppColors.cinereous,
                            textColor = AppColors.ghostWhite,
                            command = fun () -> dispatch SaveVehicle)],

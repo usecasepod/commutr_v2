@@ -12,8 +12,7 @@ module App =
         | VehicleListingMsg of VehicleListing.Msg
         | VehicleUpdateMsg of VehicleUpdate.Msg
         | GoToUpdateVehicle of Vehicle option
-        | UpdateWhenVehicleAdded of Vehicle
-        | UpdateWhenVehicleUpdated of Vehicle
+        | UpdateWhenVehicleSaved
         | NavigationPopped
     
     type Model =
@@ -47,8 +46,7 @@ module App =
     let handleVehicleUpdateExternalMsg externalMsg =
         match externalMsg with
         | VehicleUpdate.ExternalMsg.NoOp -> Cmd.none
-        | VehicleUpdate.ExternalMsg.GoBackAfterVehicleAdded vehicle -> Cmd.ofMsg (UpdateWhenVehicleAdded vehicle)
-        | VehicleUpdate.ExternalMsg.GoBackAfterVehicleUpdated vehicle -> Cmd.ofMsg (UpdateWhenVehicleUpdated vehicle)
+        | VehicleUpdate.ExternalMsg.GoBackAfterVehicleSaved -> Cmd.ofMsg UpdateWhenVehicleSaved
 
     let navigationMapper (model : Model) =
         let editModel = model.VehicleUpdatePageModel
@@ -57,7 +55,6 @@ module App =
         | Some _ -> { model with VehicleUpdatePageModel = None }
 
     let update msg (model : Model) =
-        //TODO: handle "update when" events
         match msg with
         | VehicleListingMsg msg ->
             let m, cmd, externalMsg = VehicleListing.update msg model.VehicleListPageModel
@@ -82,8 +79,8 @@ module App =
                 newModel, model.WorkaroundNavPageBugPendingCmd
             | false ->
                 navigationMapper model, Cmd.none
-        | UpdateWhenVehicleAdded vehicle ->
-            let listMsg = Cmd.ofMsg (VehicleListingMsg (VehicleListing.Msg.VehicleAdded vehicle))
+        | UpdateWhenVehicleSaved ->
+            let listMsg = Cmd.ofMsg (VehicleListingMsg (VehicleListing.Msg.LoadVehicles))
             { model with VehicleUpdatePageModel = None }, listMsg
 
     let getPages allPages =

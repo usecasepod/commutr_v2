@@ -11,7 +11,6 @@ open Xamarin.Forms
 module VehicleListing =
     type Model =
         { Vehicles: Vehicle list
-          SelectedVehicle: Option<Vehicle>
           IsLoading: bool }
 
     type ExternalMsg =
@@ -20,10 +19,11 @@ module VehicleListing =
         | NavigateToUpdate of Vehicle
 
     type Msg =
-        | VehicleAdded of Vehicle
         | NewVehicleTapped
-        | VehicleRemoved of Vehicle
+        | RemoveVehicle of Vehicle
+        | UpdateVehicle of Vehicle
         | VehicleModified of Vehicle
+        | LoadVehicles
         | VehiclesLoaded of Vehicle list
 
     let loadAsync () = async {
@@ -31,12 +31,24 @@ module VehicleListing =
         return VehiclesLoaded vehicles
     }
 
+    let deleteAsync (vehicle) = async {
+       do! deleteVehicle vehicle
+       let! msg = loadAsync ()
+       return msg
+    }
+
+    let updateAsync (vehicle) = async {
+        do! updateVehicle vehicle |> Async.Ignore
+        let! msg = loadAsync()
+        return msg
+    }
+
+    let initModel =
+        { Vehicles = []
+          IsLoading = true }
+
     let init () =
-        let m =
-            { Vehicles = []
-              SelectedVehicle = None
-              IsLoading = true }
-        m, Cmd.ofAsyncMsg (loadAsync ())
+        initModel, Cmd.ofMsg LoadVehicles
 
     let updateVehicles model vehicles =
         let m = { model with Vehicles = vehicles }
@@ -46,20 +58,22 @@ module VehicleListing =
         let addVehicle = fun v vehicles -> v :: vehicles
         let removeVehicle = fun (v: Vehicle) (vehicles: Vehicle list) -> vehicles |> List.filter (fun item -> item.Id <> v.Id)
         match msg with
-        | VehicleAdded vehicle ->
-            let updatedVehicles = addVehicle vehicle model.Vehicles
-            updateVehicles model updatedVehicles
-        | VehicleRemoved vehicle ->
-            let updatedVehicles = removeVehicle vehicle model.Vehicles //TODO: remove from db
-            updateVehicles model updatedVehicles
+        | LoadVehicles ->
+            let cmd = Cmd.ofAsyncMsg (loadAsync())
+            initModel, cmd, ExternalMsg.NoOp
+        | VehiclesLoaded vehicles ->
+            let m = { model with Vehicles = vehicles; IsLoading = false }
+            m, Cmd.none, ExternalMsg.NoOp
+        | RemoveVehicle vehicle ->
+            let cmd = Cmd.ofAsyncMsg(deleteAsync vehicle)
+            model, cmd, ExternalMsg.NoOp
         | VehicleModified vehicle ->
             let updatedVehicles = addVehicle vehicle (removeVehicle vehicle model.Vehicles) //TODO: save modifications to db
             updateVehicles model updatedVehicles
         | NewVehicleTapped ->
             model, Cmd.none, ExternalMsg.NavigateToAdd
-        | VehiclesLoaded vehicles ->
-            let m = { model with Vehicles = vehicles; IsLoading = false }
-            m, Cmd.none, ExternalMsg.NoOp
+        | UpdateVehicle vehicle ->
+            model, Cmd.none, ExternalMsg.NavigateToUpdate vehicle
 
     let view model dispatch =
         let items =
@@ -73,17 +87,23 @@ module VehicleListing =
                                  [ View.SwipeItem
                                      (text = "Delete",
                                       backgroundColor = Color.Red,
-                                      command = fun () -> dispatch (VehicleRemoved itemModel)) ]),
+                                      command = fun () -> dispatch (RemoveVehicle itemModel))
+                                   View.SwipeItem
+                                     (text = "Edit",
+                                      backgroundColor = AppColors.silverSandMediumDark,
+                                      command = fun () -> dispatch (UpdateVehicle itemModel))]),
                      leftItems =
                          View.SwipeItems
                              (items =
                                  [ View.SwipeItem
-                                     (text = (if not itemModel.IsPrimary then "Primary" else "Not Primary"),
+                                     (text =
+                                          (match itemModel.IsPrimary with
+                                          | false -> "Primary"
+                                          | true -> "Not Primary"),
                                       backgroundColor =
-                                          (if not itemModel.IsPrimary then
-                                              AppColors.mandarin
-                                           else
-                                               AppColors.silverSandMediumDark),
+                                          (match itemModel.IsPrimary with
+                                          | false -> AppColors.mandarin
+                                          | true -> AppColors.silverSandMediumDark),
                                       command =
                                           fun () ->
                                               dispatch
