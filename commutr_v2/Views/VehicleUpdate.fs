@@ -1,8 +1,8 @@
 namespace CommutrV2.Views
 
 open CommutrV2
-open CommutrV2.Models
-open CommutrV2.Repository
+open CommutrV2.Models.Vehicles
+open CommutrV2.VehicleRepository
 open Fabulous
 open Fabulous.XamarinForms
 open Xamarin.Forms

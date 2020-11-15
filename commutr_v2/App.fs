@@ -4,7 +4,7 @@ namespace CommutrV2
 open CommutrV2.Views
 open Fabulous
 open Fabulous.XamarinForms
-open CommutrV2.Models
+open CommutrV2.Models.Vehicles
 open Xamarin.Forms
 
 module App =

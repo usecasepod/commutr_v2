@@ -11,10 +11,12 @@
     <ItemGroup>
       <Compile Include="AppColors.fs" />
       <Compile Include="Models/Vehicle.fs" />
-      <Compile Include="Repository.fs" />
+      <Compile Include="Models\FillUp.fs" />
+      <Compile Include="VehicleRepository.fs" />
       <Compile Include="Components/VehicleCell.fs" />
       <Compile Include="Views/VehicleUpdate.fs" />
       <Compile Include="Views/VehicleListing.fs" />
+      <Compile Include="Views\VehicleDetailsPage.fs" />
       <Compile Include="App.fs" />
       <PackageReference Include="Xamarin.Forms" Version="4.8.0.1687" />
       <PackageReference Include="Xamarin.Essentials" Version="1.5.3.2" />

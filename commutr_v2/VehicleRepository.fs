@@ -1,12 +1,12 @@
 ﻿namespace CommutrV2
 
-open CommutrV2.Models
+open CommutrV2.Models.Vehicles
 open System.IO
 open System
 open Xamarin.Essentials
 open SQLite
 
-module Repository =
+module VehicleRepository =
     [<Table "Vehicle">]
     type VehicleObject() =
         [<PrimaryKey; AutoIncrement>]

@@ -1,7 +1,7 @@
 namespace CommutrV2.Components
 
 open CommutrV2
-open CommutrV2.Models
+open CommutrV2.Models.Vehicles
 open Fabulous.XamarinForms
 open Fabulous.XamarinForms.SkiaSharp
 open SkiaSharp.Views.Forms
