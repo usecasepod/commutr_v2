@@ -11,12 +11,14 @@ open Xamarin.Forms
 module VehicleListing =
     type Model =
         { Vehicles: Vehicle list
+          ShouldNavigate: bool
           IsLoading: bool }
 
     type ExternalMsg =
         | NoOp
         | NavigateToAdd
         | NavigateToUpdate of Vehicle
+        | NavigateToDetails of Vehicle //TODO: create details (tabbed) page and handle navigation 
 
     type Msg =
         | NewVehicleTapped
@@ -26,29 +28,29 @@ module VehicleListing =
         | LoadVehicles
         | VehiclesLoaded of Vehicle list
 
-    let loadAsync () = async {
-        let! vehicles = loadAllVehicles ()
-        return VehiclesLoaded vehicles
-    }
+    let loadAsync () =
+        async {
+            let! vehicles = loadAllVehicles ()
+            return VehiclesLoaded vehicles
+        }
 
-    let deleteAsync (vehicle) = async {
-       do! deleteVehicle vehicle
-       let! msg = loadAsync ()
-       return msg
-    }
+    let deleteAsync (vehicle) =
+        async {
+            do! deleteVehicle vehicle
+            let! msg = loadAsync ()
+            return msg
+        }
 
-    let updateAsync (vehicle) = async {
-        do! updateVehicle vehicle |> Async.Ignore
-        let! msg = loadAsync()
-        return msg
-    }
+    let updateAsync (vehicle) =
+        async {
+            do! updateVehicle vehicle |> Async.Ignore
+            let! msg = loadAsync ()
+            return msg
+        }
 
-    let initModel =
-        { Vehicles = []
-          IsLoading = true }
+    let initModel = { Vehicles = []; ShouldNavigate = true; IsLoading = true }
 
-    let init () =
-        initModel, Cmd.ofMsg LoadVehicles
+    let init () = initModel, Cmd.ofMsg LoadVehicles
 
     let updateVehicles model vehicles =
         let m = { model with Vehicles = vehicles }
@@ -56,24 +58,43 @@ module VehicleListing =
 
     let update msg model =
         let addVehicle = fun v vehicles -> v :: vehicles
-        let removeVehicle = fun (v: Vehicle) (vehicles: Vehicle list) -> vehicles |> List.filter (fun item -> item.Id <> v.Id)
+
+        let removeVehicle =
+            fun (v: Vehicle) (vehicles: Vehicle list) ->
+                vehicles
+                |> List.filter (fun item -> item.Id <> v.Id)
+
         match msg with
         | LoadVehicles ->
-            let cmd = Cmd.ofAsyncMsg (loadAsync())
-            initModel, cmd, ExternalMsg.NoOp
+            let cmd = Cmd.ofAsyncMsg (loadAsync ())
+            { model with Vehicles = []; IsLoading = true}, cmd, ExternalMsg.NoOp
         | VehiclesLoaded vehicles ->
-            let m = { model with Vehicles = vehicles; IsLoading = false }
-            m, Cmd.none, ExternalMsg.NoOp
+            let externalMsg =
+                match model.ShouldNavigate with
+                | true ->
+                    let vehOption = vehicles |> List.tryFind (fun x -> x.IsPrimary)
+                    match vehOption with
+                    | None -> ExternalMsg.NoOp
+                    | Some vehicle -> ExternalMsg.NavigateToDetails vehicle
+                | false -> ExternalMsg.NoOp
+
+            let m =
+                { model with
+                      Vehicles = vehicles
+                      ShouldNavigate = false
+                      IsLoading = false }
+
+            m, Cmd.none, externalMsg
         | RemoveVehicle vehicle ->
-            let cmd = Cmd.ofAsyncMsg(deleteAsync vehicle)
+            let cmd = Cmd.ofAsyncMsg (deleteAsync vehicle)
             model, cmd, ExternalMsg.NoOp
         | VehicleModified vehicle ->
-            let updatedVehicles = addVehicle vehicle (removeVehicle vehicle model.Vehicles) //TODO: save modifications to db
+            let updatedVehicles =
+                addVehicle vehicle (removeVehicle vehicle model.Vehicles) //TODO: save modifications to db
+
             updateVehicles model updatedVehicles
-        | NewVehicleTapped ->
-            model, Cmd.none, ExternalMsg.NavigateToAdd
-        | UpdateVehicle vehicle ->
-            model, Cmd.none, ExternalMsg.NavigateToUpdate vehicle
+        | NewVehicleTapped -> model, Cmd.none, ExternalMsg.NavigateToAdd
+        | UpdateVehicle vehicle -> model, Cmd.none, ExternalMsg.NavigateToUpdate vehicle
 
     let view model dispatch =
         let items =
@@ -89,26 +110,29 @@ module VehicleListing =
                                       backgroundColor = Color.Red,
                                       command = fun () -> dispatch (RemoveVehicle itemModel))
                                    View.SwipeItem
-                                     (text = "Edit",
-                                      backgroundColor = AppColors.silverSandMediumDark,
-                                      command = fun () -> dispatch (UpdateVehicle itemModel))]),
+                                       (text = "Edit",
+                                        backgroundColor = AppColors.silverSandMediumDark,
+                                        command = fun () -> dispatch (UpdateVehicle itemModel)) ]),
                      leftItems =
                          View.SwipeItems
                              (items =
                                  [ View.SwipeItem
                                      (text =
-                                          (match itemModel.IsPrimary with
+                                         (match itemModel.IsPrimary with
                                           | false -> "Primary"
                                           | true -> "Not Primary"),
                                       backgroundColor =
                                           (match itemModel.IsPrimary with
-                                          | false -> AppColors.mandarin
-                                          | true -> AppColors.silverSandMediumDark),
+                                           | false -> AppColors.mandarin
+                                           | true -> AppColors.silverSandMediumDark),
                                       command =
                                           fun () ->
                                               dispatch
-                                                  (VehicleModified { itemModel with IsPrimary = not itemModel.IsPrimary})) ]),
+                                                  (VehicleModified
+                                                      { itemModel with
+                                                            IsPrimary = not itemModel.IsPrimary })) ]),
                      content = VehicleCell.view itemModel))
+
         let emptyView =
             match model.IsLoading with
             | true ->
@@ -136,10 +160,19 @@ module VehicleListing =
                                 textColor = AppColors.ghostWhite,
                                 command = fun () -> dispatch NewVehicleTapped) ])
 
-
         View.ContentPage
-            (View.CollectionView
-                (items,
-                 emptyView = emptyView),
-            backgroundColor = AppColors.silverSandLight,
-            title = "Vehicles")
+            (View.AbsoluteLayout(
+                [ View.CollectionView(items, emptyView = emptyView)
+                  View.Button(text = "+",
+                              fontSize = FontSize.fromValue 24.0,
+                              backgroundColor = AppColors.mandarin,
+                              textColor = AppColors.ghostWhite,
+                              command = (fun () -> dispatch NewVehicleTapped),
+                              padding = Thickness 10.0)
+                      .WidthRequest(60.0)
+                      .HeightRequest(60.0)
+                      .ButtonCornerRadius(30)
+                      .LayoutFlags(AbsoluteLayoutFlags.PositionProportional)
+                      .LayoutBounds(Rectangle(0.90, 1.0, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize))]),
+             backgroundColor = AppColors.silverSandLight,
+             title = "Vehicles")

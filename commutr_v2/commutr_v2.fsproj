@@ -1,28 +1,28 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="AppColors.fs" />
-        <Compile Include="Models/Vehicle.fs" />
-        <Compile Include="Repository.fs" />
-        <Compile Include="Components/VehicleCell.fs" />
-        <Compile Include="Views/VehicleUpdate.fs" />
-        <Compile Include="Views/VehicleListing.fs" />
-        <Compile Include="App.fs" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="Xamarin.Forms" Version="4.8.0.1687" />
-        <PackageReference Include="Xamarin.Essentials" Version="1.5.3.2" />
-        <PackageReference Include="Fabulous.XamarinForms" Version="0.57.0" />
-        <PackageReference Include="Fabulous.XamarinForms.LiveUpdate" Version="0.57.0" />
-        <PackageReference Include="FSharp.Core" Version="4.7.1" />
         <PackageReference Update="FSharp.Core" Version="5.0.0" />
         <!-- workaround for VSMac bug https://github.com/mono/monodevelop/pull/5137 -->
-        <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-        <PackageReference Include="Fabulous.XamarinForms.SkiaSharp" Version="0.57.0" />
-        <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Include="AppColors.fs" />
+      <Compile Include="Models/Vehicle.fs" />
+      <Compile Include="Repository.fs" />
+      <Compile Include="Components/VehicleCell.fs" />
+      <Compile Include="Views/VehicleUpdate.fs" />
+      <Compile Include="Views/VehicleListing.fs" />
+      <Compile Include="App.fs" />
+      <PackageReference Include="Xamarin.Forms" Version="4.8.0.1687" />
+      <PackageReference Include="Xamarin.Essentials" Version="1.5.3.2" />
+      <PackageReference Include="Fabulous.XamarinForms" Version="0.57.0" />
+      <PackageReference Include="Fabulous.XamarinForms.LiveUpdate" Version="0.57.0" />
+      <PackageReference Include="FSharp.Core" Version="4.7.1" />
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+      <PackageReference Include="Fabulous.XamarinForms.SkiaSharp" Version="0.57.0" />
+      <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
     </ItemGroup>
 </Project>

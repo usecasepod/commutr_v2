@@ -14,7 +14,7 @@ module App =
         | GoToUpdateVehicle of Vehicle option
         | UpdateWhenVehicleSaved
         | NavigationPopped
-    
+
     type Model =
         { VehicleListPageModel: VehicleListing.Model
           VehicleUpdatePageModel: VehicleUpdate.Model option
@@ -30,69 +30,96 @@ module App =
 
     let init () =
         let listModel, listMsg = VehicleListing.init ()
+
         let initialModel =
             { VehicleListPageModel = listModel
               VehicleUpdatePageModel = None
               WorkaroundNavPageBug = false
               WorkaroundNavPageBugPendingCmd = Cmd.none }
+
         initialModel, (Cmd.map VehicleListingMsg listMsg)
 
     let handleVehicleListExternalMsg externalMsg =
         match externalMsg with
         | VehicleListing.ExternalMsg.NoOp -> Cmd.none
         | VehicleListing.ExternalMsg.NavigateToAdd -> Cmd.ofMsg (Msg.GoToUpdateVehicle None)
-        | VehicleListing.ExternalMsg.NavigateToUpdate veh -> Cmd.ofMsg (Msg.GoToUpdateVehicle (Some veh))
+        | VehicleListing.ExternalMsg.NavigateToUpdate veh -> Cmd.ofMsg (Msg.GoToUpdateVehicle(Some veh))
 
     let handleVehicleUpdateExternalMsg externalMsg =
         match externalMsg with
         | VehicleUpdate.ExternalMsg.NoOp -> Cmd.none
         | VehicleUpdate.ExternalMsg.GoBackAfterVehicleSaved -> Cmd.ofMsg UpdateWhenVehicleSaved
 
-    let navigationMapper (model : Model) =
+    let navigationMapper (model: Model) =
         let editModel = model.VehicleUpdatePageModel
         match editModel with
         | None -> model
-        | Some _ -> { model with VehicleUpdatePageModel = None }
+        | Some _ ->
+            { model with
+                  VehicleUpdatePageModel = None }
 
-    let update msg (model : Model) =
+    let update msg (model: Model) =
         match msg with
         | VehicleListingMsg msg ->
-            let m, cmd, externalMsg = VehicleListing.update msg model.VehicleListPageModel
+            let m, cmd, externalMsg =
+                VehicleListing.update msg model.VehicleListPageModel
+
             let externalCmd = handleVehicleListExternalMsg externalMsg
-            let batchCmd = Cmd.batch [ (Cmd.map VehicleListingMsg cmd); externalCmd]
-            { model with VehicleListPageModel = m}, batchCmd
+
+            let batchCmd =
+                Cmd.batch [ (Cmd.map VehicleListingMsg cmd)
+                            externalCmd ]
+
+            { model with VehicleListPageModel = m }, batchCmd
         | VehicleUpdateMsg msg ->
-            let m, cmd, externalMsg = VehicleUpdate.update msg model.VehicleUpdatePageModel.Value
-            let externalCmd = handleVehicleUpdateExternalMsg externalMsg
-            let batchCmd = Cmd.batch [ (Cmd.map VehicleUpdateMsg cmd); externalCmd]
-            { model with VehicleUpdatePageModel = Some m }, batchCmd 
+            let m, cmd, externalMsg =
+                VehicleUpdate.update msg model.VehicleUpdatePageModel.Value
+
+            let externalCmd =
+                handleVehicleUpdateExternalMsg externalMsg
+
+            let batchCmd =
+                Cmd.batch [ (Cmd.map VehicleUpdateMsg cmd)
+                            externalCmd ]
+
+            { model with
+                  VehicleUpdatePageModel = Some m },
+            batchCmd
         | GoToUpdateVehicle vehicle ->
             let m, cmd = VehicleUpdate.init vehicle
-            { model with VehicleUpdatePageModel = Some m}, (Cmd.map VehicleUpdateMsg cmd)
+            { model with
+                  VehicleUpdatePageModel = Some m },
+            (Cmd.map VehicleUpdateMsg cmd)
         | NavigationPopped ->
             match model.WorkaroundNavPageBug with
             | true ->
                 //Do not pop pages if already done manually
-                let newModel = { model with
-                                    WorkaroundNavPageBug = false
-                                    WorkaroundNavPageBugPendingCmd = Cmd.none }
+                let newModel =
+                    { model with
+                          WorkaroundNavPageBug = false
+                          WorkaroundNavPageBugPendingCmd = Cmd.none }
+
                 newModel, model.WorkaroundNavPageBugPendingCmd
-            | false ->
-                navigationMapper model, Cmd.none
+            | false -> navigationMapper model, Cmd.none
         | UpdateWhenVehicleSaved ->
-            let listMsg = Cmd.ofMsg (VehicleListingMsg (VehicleListing.Msg.LoadVehicles))
-            { model with VehicleUpdatePageModel = None }, listMsg
+            let listMsg =
+                Cmd.ofMsg (VehicleListingMsg(VehicleListing.Msg.LoadVehicles))
+
+            { model with
+                  VehicleUpdatePageModel = None },
+            listMsg
 
     let getPages allPages =
         let vehicleListing = allPages.VehicleListing
         let vehicleUpdate = allPages.VehicleUpdate
 
         match vehicleUpdate with
-        | None -> [vehicleListing]
-        | Some update -> [vehicleListing; update]
+        | None -> [ vehicleListing ]
+        | Some update -> [ vehicleListing; update ]
 
     let view model dispatch =
-        let listingPage = VehicleListing.view model.VehicleListPageModel (VehicleListingMsg >> dispatch)
+        let listingPage =
+            VehicleListing.view model.VehicleListPageModel (VehicleListingMsg >> dispatch)
 
         let updatePage =
             model.VehicleUpdatePageModel
@@ -115,8 +142,6 @@ module App =
 
 type App() as app =
     inherit Application()
-
-
 
     let runner =
         App.program
