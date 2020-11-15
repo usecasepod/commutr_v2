@@ -3,7 +3,7 @@ namespace CommutrV2.Models
 open System
 
 type Vehicle =
-    { Id: Guid
+    { Id: int
       Make: string
       Model: string
       Year: int

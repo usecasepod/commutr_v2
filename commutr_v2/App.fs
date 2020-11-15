@@ -4,8 +4,6 @@ namespace CommutrV2
 open CommutrV2.Views
 open Fabulous
 open Fabulous.XamarinForms
-open Fabulous.XamarinForms.LiveUpdate
-open Newtonsoft.Json
 open CommutrV2.Models
 open Xamarin.Forms
 
@@ -31,13 +29,14 @@ module App =
         { VehicleListing: ViewElement
           VehicleUpdate: ViewElement option }
 
-    let initModel =
-        { VehicleListPageModel = VehicleListing.init ()
-          VehicleUpdatePageModel = None
-          WorkaroundNavPageBug = false
-          WorkaroundNavPageBugPendingCmd = Cmd.none }
-
-    let init () = initModel, []
+    let init () =
+        let listModel, listMsg = VehicleListing.init ()
+        let initialModel =
+            { VehicleListPageModel = listModel
+              VehicleUpdatePageModel = None
+              WorkaroundNavPageBug = false
+              WorkaroundNavPageBugPendingCmd = Cmd.none }
+        initialModel, (Cmd.map VehicleListingMsg listMsg)
 
     let handleVehicleListExternalMsg externalMsg =
         match externalMsg with
@@ -119,6 +118,8 @@ module App =
 
 type App() as app =
     inherit Application()
+
+
 
     let runner =
         App.program

@@ -2,9 +2,11 @@ namespace CommutrV2.Views
 
 open CommutrV2
 open CommutrV2.Models
+open CommutrV2.Repository
 open Fabulous
 open Fabulous.XamarinForms
 open System
+open Xamarin.Forms
 
 module VehicleUpdate =
     type Model = { Vehicle: Vehicle }
@@ -20,10 +22,12 @@ module VehicleUpdate =
         | UpdateYear of int
         | UpdateIsPrimary of bool
         | SaveVehicle
+        | VehicleAdded of Vehicle
+        | VehicleUpdated of Vehicle
 
     let initModel:Model =
         { Vehicle =
-            { Id = Guid.Empty
+            { Id = 0
               Make = ""
               Model = ""
               Year = 0
@@ -37,13 +41,13 @@ module VehicleUpdate =
 
         model, Cmd.none
 
-    let createOrUpdateVehicle model =
-        //TODO: eventually this will be responsible for persisting
+    let createOrUpdateVehicleAsync model = async {
         match model.Vehicle.Id with
-        | id when id = Guid.Empty ->
-            let modelWithId = { model with Vehicle = { model.Vehicle with Id = Guid.NewGuid() }}
-            modelWithId, Cmd.none, ExternalMsg.GoBackAfterVehicleAdded modelWithId.Vehicle
-        | _ -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleUpdated model.Vehicle
+        | 0 ->
+            let! insertedVehicle = insertVehicle model.Vehicle
+            return VehicleAdded insertedVehicle
+        | _ -> return VehicleUpdated model.Vehicle //TODO: persist modifications (i.e. update record)
+    }
 
     let update msg model =
         match msg with
@@ -59,24 +63,79 @@ module VehicleUpdate =
         | UpdateIsPrimary isPrimary ->
             let m = { model with Vehicle = { model.Vehicle with IsPrimary = isPrimary } }
             m, Cmd.none, ExternalMsg.NoOp
-        | SaveVehicle -> createOrUpdateVehicle model //TODO: add to vehicle listing and navigate? (This is gonna be interesting)
+        | SaveVehicle ->
+            let cmd = Cmd.ofAsyncMsg (createOrUpdateVehicleAsync model)
+            model, cmd, ExternalMsg.NoOp
+        | VehicleAdded vehicle ->
+            model, Cmd.none, ExternalMsg.GoBackAfterVehicleAdded vehicle
+        | VehicleUpdated vehicle ->
+            model, Cmd.none, ExternalMsg.GoBackAfterVehicleUpdated vehicle
+
+    let yearToString year =
+        match year with
+        | 0 -> ""
+        | _ -> year.ToString()
+
+    let stringToYear str =
+        match str with
+        | "" -> 0
+        | _ -> str |> int
 
     let view model dispatch =
-        let label =
+        let titleText =
             match model.Vehicle.Id with
-            | id when id = Guid.Empty -> View.Label(text = "Create a new vehicle")
-            | _ -> View.Label(text = "Edit this vehicle")
+            | 0 -> "Create a new vehicle"
+            | _ -> "Edit this vehicle"
 
         View.ContentPage
             (View.StackLayout
                 (children =
-                    [ label
+                    [ View.Label
+                          (text = "Make",
+                           textColor = AppColors.cinereous,
+                           fontAttributes = FontAttributes.Bold)
                       View.Entry
-                          (placeholder = "Make",
+                          (placeholder = "Honda",
                            text = model.Vehicle.Make,
+                           clearButtonVisibility = ClearButtonVisibility.WhileEditing,
                            textChanged = fun e -> e.NewTextValue |> (UpdateMake >> dispatch))
+                      View.Label
+                          (text = "Model",
+                           textColor = AppColors.cinereous,
+                           fontAttributes = FontAttributes.Bold)
+                      View.Entry
+                          (placeholder = "Accord",
+                           text = model.Vehicle.Model,
+                           clearButtonVisibility = ClearButtonVisibility.WhileEditing,
+                           textChanged = fun e -> e.NewTextValue |> (UpdateModel >> dispatch))
+                      View.Label
+                          (text = "Year",
+                           textColor = AppColors.cinereous,
+                           fontAttributes = FontAttributes.Bold)
+                      View.Entry
+                          (placeholder = "2005",
+                           text = yearToString model.Vehicle.Year,
+                           keyboard = Keyboard.Numeric,
+                           clearButtonVisibility = ClearButtonVisibility.WhileEditing,
+                           textChanged = fun e -> e.NewTextValue |> stringToYear |> (UpdateYear >> dispatch))
+                      View.StackLayout
+                          (children =
+                            [ View.Label
+                                (text = "Is Primary?",
+                                 textColor = AppColors.cinereous,
+                                 fontAttributes = FontAttributes.Bold,
+                                 verticalOptions = LayoutOptions.Center)
+                              View.CheckBox
+                                (isChecked = model.Vehicle.IsPrimary,
+                                 color = AppColors.mandarin,
+                                 verticalOptions = LayoutOptions.Center,
+                                 checkedChanged = fun e -> e.Value |> (UpdateIsPrimary >> dispatch))],
+                           orientation = StackOrientation.Horizontal)
                       View.Button
                           (text = "Add Vehicle",
                            backgroundColor = AppColors.cinereous,
                            textColor = AppColors.ghostWhite,
-                           command = fun () -> dispatch SaveVehicle)]))
+                           command = fun () -> dispatch SaveVehicle)],
+                margin = Thickness 10.0),
+            backgroundColor = AppColors.silverSandLight,
+            title = titleText)
