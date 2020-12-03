@@ -3,7 +3,7 @@ namespace CommutrV2.Views
 open CommutrV2
 open CommutrV2.Models.Vehicles
 open CommutrV2.Components
-open CommutrV2.VehicleRepository
+open CommutrV2.Data.VehicleRepository
 open Fabulous
 open Fabulous.XamarinForms
 open Xamarin.Forms
@@ -18,7 +18,7 @@ module VehicleListing =
         | NoOp
         | NavigateToAdd
         | NavigateToUpdate of Vehicle
-        | NavigateToDetails of Vehicle //TODO: create details (tabbed) page and handle navigation 
+        | NavigateToDetails of Vehicle //TODO: create details (tabbed) page and handle navigation
 
     type Msg =
         | NewVehicleTapped
@@ -27,6 +27,7 @@ module VehicleListing =
         | VehicleModified of Vehicle
         | LoadVehicles
         | VehiclesLoaded of Vehicle list
+        | VehicleTapped of Vehicle
 
     let loadAsync () =
         async {
@@ -48,7 +49,10 @@ module VehicleListing =
             return msg
         }
 
-    let initModel = { Vehicles = []; ShouldNavigate = true; IsLoading = true }
+    let initModel =
+        { Vehicles = []
+          ShouldNavigate = true
+          IsLoading = true }
 
     let init () = initModel, Cmd.ofMsg LoadVehicles
 
@@ -67,12 +71,18 @@ module VehicleListing =
         match msg with
         | LoadVehicles ->
             let cmd = Cmd.ofAsyncMsg (loadAsync ())
-            { model with Vehicles = []; IsLoading = true}, cmd, ExternalMsg.NoOp
+            { model with
+                  Vehicles = []
+                  IsLoading = true },
+            cmd,
+            ExternalMsg.NoOp
         | VehiclesLoaded vehicles ->
             let externalMsg =
                 match model.ShouldNavigate with
                 | true ->
-                    let vehOption = vehicles |> List.tryFind (fun x -> x.IsPrimary)
+                    let vehOption =
+                        vehicles |> List.tryFind (fun x -> x.IsPrimary)
+
                     match vehOption with
                     | None -> ExternalMsg.NoOp
                     | Some vehicle -> ExternalMsg.NavigateToDetails vehicle
@@ -95,6 +105,7 @@ module VehicleListing =
             updateVehicles model updatedVehicles
         | NewVehicleTapped -> model, Cmd.none, ExternalMsg.NavigateToAdd
         | UpdateVehicle vehicle -> model, Cmd.none, ExternalMsg.NavigateToUpdate vehicle
+        | VehicleTapped vehicle -> model, Cmd.none, ExternalMsg.NavigateToDetails vehicle
 
     let view model dispatch =
         let items =
@@ -102,6 +113,8 @@ module VehicleListing =
             |> List.map (fun itemModel ->
                 View.SwipeView
                     (backgroundColor = AppColors.silverSandLight,
+                     gestureRecognizers =
+                         [ View.TapGestureRecognizer(command = fun () -> dispatch (VehicleTapped itemModel)) ],
                      rightItems =
                          View.SwipeItems
                              (items =
@@ -161,18 +174,15 @@ module VehicleListing =
                                 command = fun () -> dispatch NewVehicleTapped) ])
 
         View.ContentPage
-            (View.AbsoluteLayout(
-                [ View.CollectionView(items, emptyView = emptyView)
-                  View.Button(text = "+",
-                              fontSize = FontSize.fromValue 24.0,
-                              backgroundColor = AppColors.mandarin,
-                              textColor = AppColors.ghostWhite,
-                              command = (fun () -> dispatch NewVehicleTapped),
-                              padding = Thickness 10.0)
-                      .WidthRequest(60.0)
-                      .HeightRequest(60.0)
-                      .ButtonCornerRadius(30)
-                      .LayoutFlags(AbsoluteLayoutFlags.PositionProportional)
-                      .LayoutBounds(Rectangle(0.90, 1.0, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize))]),
+            (View.AbsoluteLayout
+                ([ View.CollectionView(items, emptyView = emptyView, selectionMode = SelectionMode.Single)
+                   View.Button(text = "+",
+                               fontSize = FontSize.fromValue 24.0,
+                               backgroundColor = AppColors.mandarin,
+                               textColor = AppColors.ghostWhite,
+                               command = (fun () -> dispatch NewVehicleTapped),
+                               padding = Thickness 10.0).WidthRequest(60.0).HeightRequest(60.0).ButtonCornerRadius(30)
+                       .LayoutFlags(AbsoluteLayoutFlags.PositionProportional)
+                       .LayoutBounds(Rectangle(0.90, 1.0, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize)) ]),
              backgroundColor = AppColors.silverSandLight,
              title = "Vehicles")

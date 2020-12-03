@@ -4,7 +4,7 @@ open CommutrV2
 open CommutrV2.Models.Vehicles
 open CommutrV2.Models.FillUps
 open CommutrV2.Components
-open CommutrV2.VehicleRepository
+open CommutrV2.Data.VehicleRepository
 open Fabulous
 open Fabulous.XamarinForms
 open Xamarin.Forms
@@ -14,13 +14,15 @@ module VehicleDetailsPage =
         { Vehicle: Vehicle
           FillUps: FillUp list }
 
-    type Msg =
-        | LoadFillUps
-        | FillupsLoaded
+    type Msg = | LoadFillUps
+
+    type ExternalMsg = | NoOp
 
     let init vehicle =
         { Vehicle = vehicle; FillUps = [] }, Cmd.ofMsg LoadFillUps
 
     let update msg model =
         match msg with
-        | LoadFillUps -> 
+        | LoadFillUps -> model, Cmd.none, ExternalMsg.NoOp
+
+    let view model dispatch = View.TabbedPage()

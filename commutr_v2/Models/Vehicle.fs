@@ -1,6 +1,6 @@
 namespace CommutrV2.Models
 
-module Vehicles = 
+module Vehicles =
     type Vehicle =
         { Id: int
           Make: string
