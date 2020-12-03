@@ -9,3 +9,6 @@ module Vehicles =
           Odometer: decimal
           Notes: string
           IsPrimary: bool }
+
+    let formattedName vehicle =
+        sprintf "%i %s %s" vehicle.Year vehicle.Make vehicle.Model

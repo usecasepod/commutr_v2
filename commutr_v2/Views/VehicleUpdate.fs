@@ -126,7 +126,7 @@ module VehicleUpdate =
         let titleText =
             match model.Vehicle.Id with
             | 0 -> "New Vehicle"
-            | _ -> sprintf "%i %s %s" model.Vehicle.Year model.Vehicle.Make model.Vehicle.Model
+            | _ -> formattedName model.Vehicle
 
         View.ContentPage
             (View.StackLayout
