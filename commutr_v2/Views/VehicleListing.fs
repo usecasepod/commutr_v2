@@ -18,7 +18,7 @@ module VehicleListing =
         | NoOp
         | NavigateToAdd
         | NavigateToUpdate of Vehicle
-        | NavigateToDetails of Vehicle //TODO: create details (tabbed) page and handle navigation
+        | NavigateToDetails of Vehicle
 
     type Msg =
         | NewVehicleTapped

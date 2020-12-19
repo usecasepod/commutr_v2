@@ -6,6 +6,7 @@ open CommutrV2.Data.VehicleRepository
 open Fabulous
 open Fabulous.XamarinForms
 open Xamarin.Forms
+open System
 
 module VehicleUpdate =
     type Model = { Vehicle: Vehicle }
@@ -109,8 +110,10 @@ module VehicleUpdate =
 
     let stringToYear str =
         match str with
-        | "" -> 0
-        | _ -> str |> int
+        | "" -> Some 0
+        | _ ->
+            try str |> int |> Some
+            with :? FormatException -> None
 
     let odometerToString o =
         match o with
@@ -120,7 +123,9 @@ module VehicleUpdate =
     let stringToOdometer str =
         match str with
         | "" -> 0m
-        | _ -> str |> decimal
+        | _ ->
+            try str |> decimal |> Some str
+            with :? FormatException -> None
 
     let view model dispatch =
         let titleText =
@@ -151,9 +156,10 @@ module VehicleUpdate =
                            clearButtonVisibility = ClearButtonVisibility.WhileEditing,
                            textChanged =
                                fun e ->
-                                   e.NewTextValue
-                                   |> stringToYear
-                                   |> (UpdateYear >> dispatch))
+                                match stringToYear e.NewTextValue with
+                                      | Some y -> y
+                                      | None -> model.Vehicle.Year
+                               |> (UpdateYear >> dispatch))
                       View.Label
                           (text = "Odometer", textColor = AppColors.cinereous, fontAttributes = FontAttributes.Bold)
                       View.Entry
