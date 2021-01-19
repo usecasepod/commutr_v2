@@ -1,25 +1,26 @@
 ﻿namespace CommutrV2.Data
 
+open CommutrV2.Models
 open CommutrV2.Models.Vehicles
 open CommutrV2.Data.Database
 
 module VehicleRepository =
     let convertToObject (item: Vehicle) =
         let obj = VehicleObject()
-        obj.Id <- item.Id
+        obj.Id <- VehicleId.value item.Id
         obj.Make <- item.Make
         obj.Model <- item.Model
-        obj.Year <- item.Year
+        obj.Year <- Year.value item.Year
         obj.Odometer <- item.Odometer
         obj.Notes <- item.Notes
         obj.IsPrimary <- item.IsPrimary
         obj
 
     let convertToModel (obj: VehicleObject): Vehicle =
-        { Id = obj.Id
+        { Id = VehicleId.create obj.Id
           Make = obj.Make
           Model = obj.Model
-          Year = obj.Year
+          Year = Year.create obj.Year
           Odometer = obj.Odometer
           Notes = obj.Notes
           IsPrimary = obj.IsPrimary }
@@ -50,7 +51,7 @@ module VehicleRepository =
 
             let rowId = rowIdObj |> int
 
-            return { vehicle with Id = rowId }
+            return { vehicle with Id = VehicleId.create rowId }
         }
 
     let updateVehicle (vehicle) =

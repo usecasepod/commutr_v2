@@ -4,10 +4,10 @@ open System
 
 module FillUps =
     type FillUp =
-        { Id: int
+        { Id: FillUpId.T
           Date: DateTime
           FuelAmount: decimal
           PricePerFuelAmount: decimal
           Distance: decimal
           Notes: string
-          VehicleId: int }
+          VehicleId: VehicleId.T }

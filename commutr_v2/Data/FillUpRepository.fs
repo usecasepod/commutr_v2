@@ -1,36 +1,36 @@
 ﻿namespace CommutrV2.Data
 
+open CommutrV2.Models
 open CommutrV2.Models.FillUps
-open CommutrV2.Data.Database
-open System.Linq
+open Database
 
 module FillUpRepository =
     let convertToObject (item: FillUp) =
         let obj = FillUpObject()
-        obj.Id <- item.Id
+        obj.Id <- FillUpId.value item.Id
         obj.Date <- item.Date
         obj.FuelAmount <- item.FuelAmount
         obj.PricePerFuelAmount <- item.PricePerFuelAmount
         obj.Notes <- item.Notes
         obj.Distance <- item.Distance
-        obj.VehicleId <- item.VehicleId
+        obj.VehicleId <- VehicleId.value item.VehicleId
         obj
 
     let convertToModel (obj: FillUpObject): FillUp =
-        { Id = obj.Id
+        { Id = FillUpId.create obj.Id
           Date = obj.Date
           FuelAmount = obj.FuelAmount
           PricePerFuelAmount = obj.PricePerFuelAmount
           Notes = obj.Notes
           Distance = obj.Distance
-          VehicleId = obj.VehicleId }
+          VehicleId = VehicleId.create obj.VehicleId }
 
     let loadFillUpsByVehicleId (vehicleId) =
         async {
             let! database = connect ()
 
             let! objs =
-                database.Table<FillUpObject>().Where(fun x -> x.VehicleId = vehicleId).ToListAsync()
+                database.Table<FillUpObject>().Where(fun x -> x.VehicleId = VehicleId.value vehicleId).ToListAsync()
                 |> Async.AwaitTask
 
             return objs |> Seq.toList |> List.map convertToModel
@@ -50,7 +50,7 @@ module FillUpRepository =
                 |> Async.AwaitTask
 
             let rowId = rowIdObj |> int
-            return { fillUp with Id = rowId }
+            return { fillUp with Id = FillUpId.create rowId }
         }
 
     let updateFillUp (fillUp) =

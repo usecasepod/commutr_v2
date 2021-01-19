@@ -3,20 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
-
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "commutr_v2", "commutr_v2\commutr_v2.fsproj", "{9066B05B-F0BF-4837-A5B5-A716E83720C4}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "commutr_v2", "commutr_v2\commutr_v2.fsproj", "{9066B05B-F0BF-4837-A5B5-A716E83720C4}"
 EndProject
-
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "commutr_v2.Android", "commutr_v2.Android\commutr_v2.Android.fsproj", "{A63CC887-4BC4-4BF4-9550-A143D7DCF5AF}"
 EndProject
-
-
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "commutr_v2.iOS", "commutr_v2.iOS\commutr_v2.iOS.fsproj", "{2009D70A-AC12-4265-95BF-42FFCEAA6AC3}"
 EndProject
-
-
-
-
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Ad-Hoc|Any CPU = Ad-Hoc|Any CPU

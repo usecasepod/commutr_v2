@@ -7,6 +7,7 @@ open Fabulous
 open Fabulous.XamarinForms
 open Xamarin.Forms
 open System
+open CommutrV2.Models
 
 module VehicleUpdate =
     type Model = { Vehicle: Vehicle }
@@ -18,7 +19,7 @@ module VehicleUpdate =
     type Msg =
         | UpdateMake of string
         | UpdateModel of string
-        | UpdateYear of int
+        | UpdateYear of Year.T
         | UpdateOdometer of decimal
         | UpdateNotes of string
         | UpdateIsPrimary of bool
@@ -27,10 +28,10 @@ module VehicleUpdate =
 
     let initModel: Model =
         { Vehicle =
-              { Id = 0
+              { Id = VehicleId.create 0
                 Make = ""
                 Model = ""
-                Year = 0
+                Year = Year.create 0
                 Odometer = 0m
                 Notes = ""
                 IsPrimary = false } }
@@ -46,7 +47,7 @@ module VehicleUpdate =
     let createOrUpdateVehicleAsync model =
         async {
             match model.Vehicle.Id with
-            | 0 ->
+            | VehicleId.T.VehicleId 0 ->
                 do! insertVehicle model.Vehicle |> Async.Ignore
                 return VehicleSaved
             | _ ->
@@ -104,15 +105,15 @@ module VehicleUpdate =
         | VehicleSaved -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleSaved
 
     let yearToString year =
-        match year with
+        match Year.value year with
         | 0 -> ""
-        | _ -> year.ToString()
+        | y -> y.ToString()
 
     let stringToYear str =
         match str with
-        | "" -> Some 0
+        | "" -> 0 |> Year.create |> Some
         | _ ->
-            try str |> int |> Some
+            try str |> int |> Year.create |> Some
             with :? FormatException -> None
 
     let odometerToString o =
@@ -122,15 +123,15 @@ module VehicleUpdate =
 
     let stringToOdometer str =
         match str with
-        | "" -> 0m
+        | "" -> Some 0m
         | _ ->
-            try str |> decimal |> Some str
+            try str |> decimal |> Some
             with :? FormatException -> None
 
     let view model dispatch =
         let titleText =
             match model.Vehicle.Id with
-            | 0 -> "New Vehicle"
+            | VehicleId.T.VehicleId 0 -> "New Vehicle"
             | _ -> formattedName model.Vehicle
 
         View.ContentPage
@@ -169,8 +170,9 @@ module VehicleUpdate =
                            clearButtonVisibility = ClearButtonVisibility.WhileEditing,
                            textChanged =
                                fun e ->
-                                   e.NewTextValue
-                                   |> stringToOdometer
+                                   match stringToOdometer e.NewTextValue with
+                                        | Some o -> o
+                                        | None -> model.Vehicle.Odometer
                                    |> (UpdateOdometer >> dispatch))
                       View.StackLayout
                           (children =

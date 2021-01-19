@@ -38,15 +38,13 @@ module VehicleListing =
     let deleteAsync (vehicle) =
         async {
             do! deleteVehicle vehicle
-            let! msg = loadAsync ()
-            return msg
+            return LoadVehicles
         }
 
     let updateAsync (vehicle) =
         async {
             do! updateVehicle vehicle |> Async.Ignore
-            let! msg = loadAsync ()
-            return msg
+            return LoadVehicles
         }
 
     let initModel =
@@ -56,18 +54,7 @@ module VehicleListing =
 
     let init () = initModel, Cmd.ofMsg LoadVehicles
 
-    let updateVehicles model vehicles =
-        let m = { model with Vehicles = vehicles }
-        m, Cmd.none, ExternalMsg.NoOp
-
     let update msg model =
-        let addVehicle = fun v vehicles -> v :: vehicles
-
-        let removeVehicle =
-            fun (v: Vehicle) (vehicles: Vehicle list) ->
-                vehicles
-                |> List.filter (fun item -> item.Id <> v.Id)
-
         match msg with
         | LoadVehicles ->
             let cmd = Cmd.ofAsyncMsg (loadAsync ())
@@ -99,10 +86,8 @@ module VehicleListing =
             let cmd = Cmd.ofAsyncMsg (deleteAsync vehicle)
             model, cmd, ExternalMsg.NoOp
         | VehicleModified vehicle ->
-            let updatedVehicles =
-                addVehicle vehicle (removeVehicle vehicle model.Vehicles) //TODO: save modifications to db
-
-            updateVehicles model updatedVehicles
+            let cmd = Cmd.ofAsyncMsg (updateAsync vehicle)
+            model, cmd, ExternalMsg.NoOp
         | NewVehicleTapped -> model, Cmd.none, ExternalMsg.NavigateToAdd
         | UpdateVehicle vehicle -> model, Cmd.none, ExternalMsg.NavigateToUpdate vehicle
         | VehicleTapped vehicle -> model, Cmd.none, ExternalMsg.NavigateToDetails vehicle
@@ -114,7 +99,8 @@ module VehicleListing =
                 View.SwipeView
                     (backgroundColor = AppColors.silverSandLight,
                      gestureRecognizers =
-                         [ View.TapGestureRecognizer(command = fun () -> dispatch (VehicleTapped itemModel)) ],
+                         [ View.TapGestureRecognizer(command = (fun () -> dispatch (VehicleTapped itemModel)),
+                                                     numberOfTapsRequired = 2) ],
                      rightItems =
                          View.SwipeItems
                              (items =

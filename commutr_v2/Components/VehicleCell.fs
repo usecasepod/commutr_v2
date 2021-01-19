@@ -1,6 +1,7 @@
 namespace CommutrV2.Components
 
 open CommutrV2
+open CommutrV2.Models
 open CommutrV2.Models.Vehicles
 open Fabulous.XamarinForms
 open Fabulous.XamarinForms.SkiaSharp
@@ -48,6 +49,6 @@ module VehicleCell =
                                                canvas.DrawCircle
                                                    (float32 (info.Width / 2), float32 (info.Height / 2), 10.0f, paint)),
                                         invalidate = true) //This will redraw on every call to update
-                                     View.Label(text = vehicle.Year.ToString())
+                                     View.Label(text = (Year.value vehicle.Year).ToString())
                                      View.Label(text = vehicle.Make)
                                      View.Label(text = vehicle.Model) ])) ])
