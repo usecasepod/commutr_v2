@@ -41,7 +41,8 @@ module VehicleRepository =
             let! database = connect ()
             let obj = convertToObject vehicle
 
-            do! database.InsertAsync(obj)
+            do!
+                database.InsertAsync(obj)
                 |> Async.AwaitTask
                 |> Async.Ignore
 
@@ -51,7 +52,9 @@ module VehicleRepository =
 
             let rowId = rowIdObj |> int
 
-            return { vehicle with Id = VehicleId.create rowId }
+            return
+                { vehicle with
+                      Id = VehicleId.create rowId }
         }
 
     let updateVehicle (vehicle) =
@@ -59,7 +62,8 @@ module VehicleRepository =
             let! database = connect ()
             let obj = convertToObject vehicle
 
-            do! database.UpdateAsync(obj)
+            do!
+                database.UpdateAsync(obj)
                 |> Async.AwaitTask
                 |> Async.Ignore
 
@@ -71,7 +75,8 @@ module VehicleRepository =
             let! database = connect ()
             let obj = convertToObject vehicle
 
-            do! database.DeleteAsync(obj)
+            do!
+                database.DeleteAsync(obj)
                 |> Async.AwaitTask
                 |> Async.Ignore
         }

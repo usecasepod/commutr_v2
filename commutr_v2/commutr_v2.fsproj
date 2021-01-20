@@ -18,6 +18,7 @@
         <Compile Include="Data\Database.fs" />
         <Compile Include="Data\VehicleRepository.fs" />
         <Compile Include="Data\FillUpRepository.fs" />
+        <Compile Include="Utils\Loading.fs" />
         <Compile Include="Components\VehicleCell.fs" />
         <Compile Include="Components\FillUpCell.fs" />
         <Compile Include="Views\VehicleUpdate.fs" />

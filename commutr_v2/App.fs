@@ -63,6 +63,7 @@ module App =
     let navigationMapper (model: Model) =
         let editModel = model.VehicleUpdatePageModel
         let detailModel = model.VehicleDetailsPageModel
+
         match (editModel, detailModel) with
         | (Some _, None) ->
             { model with
@@ -103,6 +104,7 @@ module App =
             batchCmd
         | GoToUpdateVehicle vehicle ->
             let m, cmd = VehicleUpdate.init vehicle
+
             { model with
                   VehicleUpdatePageModel = Some m },
             (Cmd.map VehicleUpdateMsg cmd)
@@ -116,6 +118,7 @@ module App =
             listMsg
         | GoToVehicleDetails vehicle ->
             let m, cmd = VehicleDetailsPage.init vehicle
+
             { model with
                   VehicleDetailsPageModel = Some m },
             (Cmd.map VehicleDetailsMsg cmd)
@@ -172,12 +175,13 @@ module App =
               VehicleUpdate = updatePage
               VehicleDetails = detailsPage }
 
-        View.NavigationPage
-            (barBackgroundColor = AppColors.cinereousMediumDark,
-             barTextColor = AppColors.silverSand,
-             backgroundColor = AppColors.silverSand,
-             popped = (fun _ -> dispatch NavigationPopped),
-             pages = getPages allPages)
+        View.NavigationPage(
+            barBackgroundColor = AppColors.cinereousMediumDark,
+            barTextColor = AppColors.silverSand,
+            backgroundColor = AppColors.silverSand,
+            popped = (fun _ -> dispatch NavigationPopped),
+            pages = getPages allPages
+        )
 
     // Note, this declaration is needed if you enable LiveUpdate
     let program =

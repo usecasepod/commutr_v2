@@ -30,7 +30,10 @@ module FillUpRepository =
             let! database = connect ()
 
             let! objs =
-                database.Table<FillUpObject>().Where(fun x -> x.VehicleId = VehicleId.value vehicleId).ToListAsync()
+                database
+                    .Table<FillUpObject>()
+                    .Where(fun x -> x.VehicleId = VehicleId.value vehicleId)
+                    .ToListAsync()
                 |> Async.AwaitTask
 
             return objs |> Seq.toList |> List.map convertToModel
@@ -41,7 +44,8 @@ module FillUpRepository =
             let! database = connect ()
             let obj = convertToObject fillUp
 
-            do! database.InsertAsync(obj)
+            do!
+                database.InsertAsync(obj)
                 |> Async.AwaitTask
                 |> Async.Ignore
 
@@ -50,7 +54,10 @@ module FillUpRepository =
                 |> Async.AwaitTask
 
             let rowId = rowIdObj |> int
-            return { fillUp with Id = FillUpId.create rowId }
+
+            return
+                { fillUp with
+                      Id = FillUpId.create rowId }
         }
 
     let updateFillUp (fillUp) =
@@ -58,7 +65,8 @@ module FillUpRepository =
             let! database = connect ()
             let obj = convertToObject fillUp
 
-            do! database.UpdateAsync(obj)
+            do!
+                database.UpdateAsync(obj)
                 |> Async.AwaitTask
                 |> Async.Ignore
 
@@ -70,7 +78,8 @@ module FillUpRepository =
             let! database = connect ()
             let obj = convertToObject fillUp
 
-            do! database.DeleteAsync(obj)
+            do!
+                database.DeleteAsync(obj)
                 |> Async.AwaitTask
                 |> Async.Ignore
         }

@@ -25,4 +25,5 @@ module VehicleDetailsPage =
         match msg with
         | LoadFillUps -> model, Cmd.none, ExternalMsg.NoOp
 
-    let view model dispatch = View.TabbedPage(title = (formattedName model.Vehicle))
+    let view model dispatch =
+        View.TabbedPage(title = (formattedName model.Vehicle))

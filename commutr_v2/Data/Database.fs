@@ -45,6 +45,7 @@ module Database =
 
             let legacyPath = Path.Combine(legacyFolder, dbFileName)
             let legacyDbExists = File.Exists legacyPath
+
             match legacyDbExists with
             | true ->
                 File.Move(legacyPath, dbPath)
@@ -52,12 +53,13 @@ module Database =
                 File.Move(Path.Combine(legacyFolder, shm), Path.Combine(FileSystem.AppDataDirectory, shm))
                 let wal = dbFileName + "-wal"
                 File.Move(Path.Combine(legacyFolder, wal), Path.Combine(FileSystem.AppDataDirectory, wal))
-            | false -> ignore
+            | false -> ignore 0
 
             let db =
                 SQLiteAsyncConnection(SQLiteConnectionString dbPath)
 
-            do! db.CreateTableAsync<VehicleObject>()
+            do!
+                db.CreateTableAsync<VehicleObject>()
                 |> Async.AwaitTask
                 |> Async.Ignore
 

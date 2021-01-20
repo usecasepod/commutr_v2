@@ -58,6 +58,7 @@ module VehicleListing =
         match msg with
         | LoadVehicles ->
             let cmd = Cmd.ofAsyncMsg (loadAsync ())
+
             { model with
                   Vehicles = []
                   IsLoading = true },
@@ -95,80 +96,100 @@ module VehicleListing =
     let view model dispatch =
         let items =
             model.Vehicles
-            |> List.map (fun itemModel ->
-                View.SwipeView
-                    (backgroundColor = AppColors.silverSandLight,
-                     gestureRecognizers =
-                         [ View.TapGestureRecognizer(command = (fun () -> dispatch (VehicleTapped itemModel)),
-                                                     numberOfTapsRequired = 2) ],
-                     rightItems =
-                         View.SwipeItems
-                             (items =
-                                 [ View.SwipeItem
-                                     (text = "Delete",
-                                      backgroundColor = Color.Red,
-                                      command = fun () -> dispatch (RemoveVehicle itemModel))
-                                   View.SwipeItem
-                                       (text = "Edit",
-                                        backgroundColor = AppColors.silverSandMediumDark,
-                                        command = fun () -> dispatch (UpdateVehicle itemModel)) ]),
-                     leftItems =
-                         View.SwipeItems
-                             (items =
-                                 [ View.SwipeItem
-                                     (text =
-                                         (match itemModel.IsPrimary with
-                                          | false -> "Primary"
-                                          | true -> "Not Primary"),
-                                      backgroundColor =
-                                          (match itemModel.IsPrimary with
-                                           | false -> AppColors.mandarin
-                                           | true -> AppColors.silverSandMediumDark),
-                                      command =
-                                          fun () ->
-                                              dispatch
-                                                  (VehicleModified
-                                                      { itemModel with
-                                                            IsPrimary = not itemModel.IsPrimary })) ]),
-                     content = VehicleCell.view itemModel))
+            |> List.map
+                (fun itemModel ->
+                    View.SwipeView(
+                        backgroundColor = AppColors.silverSandLight,
+                        gestureRecognizers =
+                            [ View.TapGestureRecognizer(
+                                command = (fun () -> dispatch (VehicleTapped itemModel)),
+                                numberOfTapsRequired = 2
+                              ) ],
+                        rightItems =
+                            View.SwipeItems(
+                                items =
+                                    [ View.SwipeItem(
+                                        text = "Delete",
+                                        backgroundColor = Color.Red,
+                                        command = fun () -> dispatch (RemoveVehicle itemModel)
+                                      )
+                                      View.SwipeItem(
+                                          text = "Edit",
+                                          backgroundColor = AppColors.silverSandMediumDark,
+                                          command = fun () -> dispatch (UpdateVehicle itemModel)
+                                      ) ]
+                            ),
+                        leftItems =
+                            View.SwipeItems(
+                                items =
+                                    [ View.SwipeItem(
+                                        text =
+                                            (match itemModel.IsPrimary with
+                                             | false -> "Primary"
+                                             | true -> "Not Primary"),
+                                        backgroundColor =
+                                            (match itemModel.IsPrimary with
+                                             | false -> AppColors.mandarin
+                                             | true -> AppColors.silverSandMediumDark),
+                                        command =
+                                            fun () ->
+                                                dispatch (
+                                                    VehicleModified
+                                                        { itemModel with
+                                                              IsPrimary = not itemModel.IsPrimary }
+                                                )
+                                      ) ]
+                            ),
+                        content = VehicleCell.view itemModel
+                    ))
 
         let emptyView =
             match model.IsLoading with
             | true ->
-                View.Label
-                    (text = "Loading Vehicles!",
-                     horizontalTextAlignment = TextAlignment.Center,
-                     verticalTextAlignment = TextAlignment.Center,
-                     fontAttributes = FontAttributes.Bold,
-                     textColor = AppColors.cinereous)
+                View.Label(
+                    text = "Loading Vehicles!",
+                    horizontalTextAlignment = TextAlignment.Center,
+                    verticalTextAlignment = TextAlignment.Center,
+                    fontAttributes = FontAttributes.Bold,
+                    textColor = AppColors.cinereous
+                )
             | false ->
-                View.StackLayout
-                    (spacing = 5.0,
-                     backgroundColor = AppColors.silverSandLight,
-                     padding = Thickness 25.0,
-                     children =
-                         [ View.Label
-                             (text = "You don't have any vehicles!",
-                              horizontalTextAlignment = TextAlignment.Center,
-                              verticalTextAlignment = TextAlignment.Center,
-                              fontAttributes = FontAttributes.Bold,
-                              textColor = AppColors.cinereous)
-                           View.Button
-                               (text = "Add a Vehicle",
-                                backgroundColor = AppColors.cinereous,
-                                textColor = AppColors.ghostWhite,
-                                command = fun () -> dispatch NewVehicleTapped) ])
+                View.StackLayout(
+                    spacing = 5.0,
+                    backgroundColor = AppColors.silverSandLight,
+                    padding = Thickness 25.0,
+                    children =
+                        [ View.Label(
+                            text = "You don't have any vehicles!",
+                            horizontalTextAlignment = TextAlignment.Center,
+                            verticalTextAlignment = TextAlignment.Center,
+                            fontAttributes = FontAttributes.Bold,
+                            textColor = AppColors.cinereous
+                          )
+                          View.Button(
+                              text = "Add a Vehicle",
+                              backgroundColor = AppColors.cinereous,
+                              textColor = AppColors.ghostWhite,
+                              command = fun () -> dispatch NewVehicleTapped
+                          ) ]
+                )
 
-        View.ContentPage
-            (View.AbsoluteLayout
-                ([ View.CollectionView(items, emptyView = emptyView, selectionMode = SelectionMode.Single)
-                   View.Button(text = "+",
-                               fontSize = FontSize.fromValue 24.0,
-                               backgroundColor = AppColors.mandarin,
-                               textColor = AppColors.ghostWhite,
-                               command = (fun () -> dispatch NewVehicleTapped),
-                               padding = Thickness 10.0).WidthRequest(60.0).HeightRequest(60.0).ButtonCornerRadius(30)
-                       .LayoutFlags(AbsoluteLayoutFlags.PositionProportional)
-                       .LayoutBounds(Rectangle(0.90, 1.0, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize)) ]),
-             backgroundColor = AppColors.silverSandLight,
-             title = "Vehicles")
+        View.ContentPage(
+            View.AbsoluteLayout(
+                [ View.CollectionView(items, emptyView = emptyView, selectionMode = SelectionMode.Single)
+                  View
+                      .Button(text = "+",
+                              fontSize = FontSize.fromValue 24.0,
+                              backgroundColor = AppColors.mandarin,
+                              textColor = AppColors.ghostWhite,
+                              command = (fun () -> dispatch NewVehicleTapped),
+                              padding = Thickness 10.0)
+                      .WidthRequest(60.0)
+                      .HeightRequest(60.0)
+                      .ButtonCornerRadius(30)
+                      .LayoutFlags(AbsoluteLayoutFlags.PositionProportional)
+                      .LayoutBounds(Rectangle(0.90, 1.0, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize)) ]
+            ),
+            backgroundColor = AppColors.silverSandLight,
+            title = "Vehicles"
+        )
