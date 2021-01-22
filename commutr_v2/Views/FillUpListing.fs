@@ -15,7 +15,7 @@ open Xamarin.Forms
 module FillUpListing =
     type Model =
         { Vehicle: Vehicle
-          FillUpLoadable: FillUp Loadable }
+          FillUps: FillUp Loadable }
 
     type ExternalMsg =
         | NoOp
@@ -52,9 +52,7 @@ module FillUpListing =
         }
 
     let init (vehicle) =
-        { Vehicle = vehicle
-          FillUpLoadable = Loading },
-        Cmd.ofMsg LoadFillUps
+        { Vehicle = vehicle; FillUps = Loading }, Cmd.ofMsg LoadFillUps
 
     let update msg model =
         match msg with
@@ -62,18 +60,16 @@ module FillUpListing =
             let cmd =
                 Cmd.ofAsyncMsg (loadAsync (model.Vehicle.Id))
 
-            let m = { model with FillUpLoadable = Loading }
+            let m = { model with FillUps = Loading }
             m, cmd, ExternalMsg.NoOp
         | FillUpsLoaded fillUps ->
-            let m =
-                { model with
-                      FillUpLoadable = Loaded fillUps }
+            let m = { model with FillUps = Loaded fillUps }
 
             m, Cmd.none, ExternalMsg.NoOp
 
     let view model dispatch =
         let content =
-            match model.FillUpLoadable with
+            match model.FillUps with
             | Loading ->
                 View.Label(
                     text = "Loading...",

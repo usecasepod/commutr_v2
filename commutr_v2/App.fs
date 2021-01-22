@@ -56,10 +56,6 @@ module App =
         | VehicleUpdate.ExternalMsg.NoOp -> Cmd.none
         | VehicleUpdate.ExternalMsg.GoBackAfterVehicleSaved -> Cmd.ofMsg UpdateWhenVehicleSaved
 
-    let handleVehicleDetailsExternalMsg externalMsg =
-        match externalMsg with
-        | VehicleDetailsPage.ExternalMsg.NoOp -> Cmd.none
-
     let navigationMapper (model: Model) =
         let editModel = model.VehicleUpdatePageModel
         let detailModel = model.VehicleDetailsPageModel
@@ -123,19 +119,12 @@ module App =
                   VehicleDetailsPageModel = Some m },
             (Cmd.map VehicleDetailsMsg cmd)
         | VehicleDetailsMsg msg ->
-            let m, cmd, externalMsg =
+            let m, cmd =
                 VehicleDetailsPage.update msg model.VehicleDetailsPageModel.Value
-
-            let externalCmd =
-                handleVehicleDetailsExternalMsg externalMsg
-
-            let batchCmd =
-                Cmd.batch [ (Cmd.map VehicleDetailsMsg cmd)
-                            externalCmd ]
 
             { model with
                   VehicleDetailsPageModel = Some m },
-            batchCmd
+            Cmd.map VehicleDetailsMsg cmd
         | NavigationPopped ->
             match model.WorkaroundNavPageBug with
             | true ->

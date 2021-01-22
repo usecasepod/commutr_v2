@@ -61,6 +61,10 @@ module Database =
             do!
                 db.CreateTableAsync<VehicleObject>()
                 |> Async.AwaitTask
+                |> ignore
+
+                db.CreateTableAsync<FillUpObject>()
+                |> Async.AwaitTask
                 |> Async.Ignore
 
             return db
