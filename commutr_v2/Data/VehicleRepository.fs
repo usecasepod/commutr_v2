@@ -11,7 +11,7 @@ module VehicleRepository =
         obj.Make <- item.Make
         obj.Model <- item.Model
         obj.Year <- Year.value item.Year
-        obj.Odometer <- item.Odometer
+        obj.Odometer <- Distance.value item.Odometer
         obj.Notes <- item.Notes
         obj.IsPrimary <- item.IsPrimary
         obj
@@ -21,7 +21,10 @@ module VehicleRepository =
           Make = obj.Make
           Model = obj.Model
           Year = Year.create obj.Year
-          Odometer = obj.Odometer
+          Odometer =
+              match Distance.create obj.Odometer with
+              | Ok o -> o
+              | _ -> Distance.T.Distance 0.0m //Reconsider this...?
           Notes = obj.Notes
           IsPrimary = obj.IsPrimary }
 

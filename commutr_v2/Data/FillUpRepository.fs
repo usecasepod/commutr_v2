@@ -5,6 +5,9 @@ open CommutrV2.Models.FillUps
 open Database
 
 module FillUpRepository =
+
+    open CommutrV2.Models.Vehicles
+
     let convertToObject (item: FillUp) =
         let obj = FillUpObject()
         obj.Id <- FillUpId.value item.Id
@@ -12,7 +15,7 @@ module FillUpRepository =
         obj.FuelAmount <- item.FuelAmount
         obj.PricePerFuelAmount <- item.PricePerFuelAmount
         obj.Notes <- item.Notes
-        obj.Distance <- item.Distance
+        obj.Distance <- Distance.value item.Distance
         obj.VehicleId <- VehicleId.value item.VehicleId
         obj
 
@@ -22,17 +25,21 @@ module FillUpRepository =
           FuelAmount = obj.FuelAmount
           PricePerFuelAmount = obj.PricePerFuelAmount
           Notes = obj.Notes
-          Distance = obj.Distance
+          Distance =
+              match Distance.create obj.Distance with
+              | Ok d -> d
+              | _ -> Distance.T.Distance 0.0m
           VehicleId = VehicleId.create obj.VehicleId }
 
     let loadFillUpsByVehicleId (vehicleId) =
         async {
             let! database = connect ()
+            let id = VehicleId.value vehicleId
 
             let! objs =
                 database
                     .Table<FillUpObject>()
-                    .Where(fun x -> x.VehicleId = VehicleId.value vehicleId)
+                    .Where(fun x -> x.VehicleId = id)
                     .ToListAsync()
                 |> Async.AwaitTask
 

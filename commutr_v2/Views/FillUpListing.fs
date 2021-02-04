@@ -125,7 +125,6 @@ module FillUpListing =
 
                 View.CollectionView(items, emptyView = emptyView, selectionMode = SelectionMode.Single)
 
-
         View.ContentPage(
             View.AbsoluteLayout(
                 [ content
@@ -140,8 +139,8 @@ module FillUpListing =
                       .HeightRequest(60.0)
                       .ButtonCornerRadius(30)
                       .LayoutFlags(AbsoluteLayoutFlags.PositionProportional)
-                      .LayoutBounds(Rectangle(0.90, 1.0, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize)) ]
+                      .LayoutBounds(Rectangle(0.90, 0.95, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize)) ]
             ),
             backgroundColor = AppColors.silverSandLight,
-            title = formattedName model.Vehicle
+            title = "Fill Ups"
         )

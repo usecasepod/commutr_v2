@@ -6,7 +6,7 @@ module Vehicles =
           Make: string
           Model: string
           Year: Year.T
-          Odometer: decimal
+          Odometer: Distance.T
           Notes: string
           IsPrimary: bool }
 

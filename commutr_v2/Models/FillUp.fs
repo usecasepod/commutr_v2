@@ -8,6 +8,6 @@ module FillUps =
           Date: DateTime
           FuelAmount: decimal
           PricePerFuelAmount: decimal
-          Distance: decimal
+          Distance: Distance.T
           Notes: string
           VehicleId: VehicleId.T }

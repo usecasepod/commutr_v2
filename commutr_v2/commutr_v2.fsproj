@@ -12,6 +12,7 @@
     <Compile Include="AppColors.fs" />
     <Compile Include="Models\FillUpId.fs" />
     <Compile Include="Models\VehicleId.fs" />
+    <Compile Include="Models\Distance.fs" />
     <Compile Include="Models\Year.fs" />
     <Compile Include="Models\Vehicle.fs" />
     <Compile Include="Models\FillUp.fs" />
@@ -19,10 +20,12 @@
     <Compile Include="Data\VehicleRepository.fs" />
     <Compile Include="Data\FillUpRepository.fs" />
     <Compile Include="Utils\Loading.fs" />
+    <Compile Include="Utils\Input.fs" />
     <Compile Include="Components\VehicleCell.fs" />
     <Compile Include="Components\FillUpCell.fs" />
     <Compile Include="Views\VehicleUpdate.fs" />
     <Compile Include="Views\VehicleListing.fs" />
+    <Compile Include="Views\FillUpUpdate.fs" />
     <Compile Include="Views\FillUpListing.fs" />
     <Compile Include="Views\VehicleDetailsPage.fs" />
     <Compile Include="App.fs" />

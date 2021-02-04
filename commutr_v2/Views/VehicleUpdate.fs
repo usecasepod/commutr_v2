@@ -8,6 +8,7 @@ open Fabulous.XamarinForms
 open Xamarin.Forms
 open System
 open CommutrV2.Models
+open CommutrV2.Utils.Input
 
 module VehicleUpdate =
     type Model = { Vehicle: Vehicle }
@@ -20,7 +21,7 @@ module VehicleUpdate =
         | UpdateMake of string
         | UpdateModel of string
         | UpdateYear of Year.T
-        | UpdateOdometer of decimal
+        | UpdateOdometer of Distance.T
         | UpdateNotes of string
         | UpdateIsPrimary of bool
         | SaveVehicle
@@ -32,7 +33,7 @@ module VehicleUpdate =
                 Make = ""
                 Model = ""
                 Year = Year.create 0
-                Odometer = 0m
+                Odometer = Distance.T.Distance 0m
                 Notes = ""
                 IsPrimary = false } }
 
@@ -104,32 +105,6 @@ module VehicleUpdate =
             model, cmd, ExternalMsg.NoOp
         | VehicleSaved -> model, Cmd.none, ExternalMsg.GoBackAfterVehicleSaved
 
-    let yearToString year =
-        match Year.value year with
-        | 0 -> ""
-        | y -> y.ToString()
-
-    let stringToYear str =
-        match str with
-        | "" -> 0 |> Year.create |> Some
-        | _ ->
-            try
-                str |> int |> Year.create |> Some
-            with :? FormatException -> None
-
-    let odometerToString o =
-        match o with
-        | 0m -> ""
-        | _ -> o.ToString()
-
-    let stringToOdometer str =
-        match str with
-        | "" -> Some 0m
-        | _ ->
-            try
-                str |> decimal |> Some
-            with :? FormatException -> None
-
     let view model dispatch =
         let titleText =
             match model.Vehicle.Id with
@@ -173,12 +148,12 @@ module VehicleUpdate =
                       )
                       View.Entry(
                           placeholder = "100000.00",
-                          text = odometerToString model.Vehicle.Odometer,
+                          text = distanceToString model.Vehicle.Odometer,
                           keyboard = Keyboard.Numeric,
                           clearButtonVisibility = ClearButtonVisibility.WhileEditing,
                           textChanged =
                               fun e ->
-                                  match stringToOdometer e.NewTextValue with
+                                  match stringToDistance e.NewTextValue with
                                   | Some o -> o
                                   | None -> model.Vehicle.Odometer
                                   |> (UpdateOdometer >> dispatch)
