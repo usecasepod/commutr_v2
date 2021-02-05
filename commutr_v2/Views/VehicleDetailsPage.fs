@@ -12,20 +12,35 @@ open Fabulous.XamarinForms
 open Xamarin.Forms
 
 module VehicleDetailsPage =
+    type Pages =
+        { DetailsTabbedPage: ViewElement
+          FillUpUpdatePage: ViewElement option }
+
     type Model =
         { Vehicle: Vehicle
-          FillUps: FillUp Loadable }
+          FillUps: FillUp Loadable
+          FillUpUpdatePageModel: FillUpUpdate.Model option }
 
     type Msg =
         | FillUpListingMsg of FillUpListing.Msg
+        | FillUpUpdateMsg of FillUpUpdate.Msg
         | UpdateWhenFillUpSaved
+        | NavigationPopped
 
     let init vehicle =
-        { Vehicle = vehicle; FillUps = Loading }, Cmd.ofMsg (FillUpListingMsg LoadFillUps)
+        { Vehicle = vehicle
+          FillUps = Loading
+          FillUpUpdatePageModel = None },
+        Cmd.ofMsg (FillUpListingMsg LoadFillUps)
 
-    let handleFillUpsExternalMsg externalMsg =
+    let handleFillUpListingExternalMsg externalMsg =
         match externalMsg with
         | FillUpListing.ExternalMsg.NoOp -> Cmd.none
+
+    let handleFillUpUpdateExternalMsg externalMsg =
+        match externalMsg with
+        | FillUpUpdate.ExternalMsg.GoBackAfterFillUpSaved -> Cmd.ofMsg UpdateWhenFillUpSaved
+        | FillUpUpdate.ExternalMsg.NoOp -> Cmd.none
 
     let update msg (model: Model) =
         match msg with
@@ -36,7 +51,8 @@ module VehicleDetailsPage =
                     { Vehicle = model.Vehicle
                       FillUps = model.FillUps }
 
-            let externalCmd = handleFillUpsExternalMsg externalMsg
+            let externalCmd =
+                handleFillUpListingExternalMsg externalMsg
 
             let batchCmd =
                 Cmd.batch [ (Cmd.map FillUpListingMsg cmd)
@@ -45,6 +61,27 @@ module VehicleDetailsPage =
             { model with
                   FillUps = listingModel.FillUps },
             batchCmd
+        | FillUpUpdateMsg fillUpUpdateMsg ->
+            let (updateModel, cmd, externalMsg) =
+                FillUpUpdate.update fillUpUpdateMsg model.FillUpUpdatePageModel.Value
+
+            let externalCmd =
+                handleFillUpUpdateExternalMsg externalMsg
+
+            let batchCmd =
+                Cmd.batch [ (Cmd.map FillUpUpdateMsg cmd)
+                            externalCmd ]
+
+            { model with
+                  FillUpUpdatePageModel = Some updateModel },
+            batchCmd
+
+    let getPages allPages =
+        let tabbedPage = allPages.DetailsTabbedPage
+
+        match allPages.FillUpUpdatePage with
+        | None -> [ tabbedPage ]
+        | Some fillUpUpdatePage -> [ fillUpUpdatePage; tabbedPage ]
 
     let view model dispatch =
         let fillUpListingTab =
@@ -53,4 +90,16 @@ module VehicleDetailsPage =
                   FillUps = model.FillUps }
                 (FillUpListingMsg >> dispatch)
 
-        View.TabbedPage(children = [ fillUpListingTab ])
+        let allPages =
+            { DetailsTabbedPage = View.TabbedPage(children = [ fillUpListingTab ])
+              FillUpUpdatePage =
+                  model.FillUpUpdatePageModel
+                  |> Option.map (fun model -> FillUpUpdate.view model (FillUpUpdateMsg >> dispatch)) }
+
+        View.NavigationPage(
+            barBackgroundColor = AppColors.cinereousMediumDark,
+            barTextColor = AppColors.silverSand,
+            backgroundColor = AppColors.silverSand,
+            popped = (fun _ -> dispatch NavigationPopped),
+            pages = getPages allPages
+        )
