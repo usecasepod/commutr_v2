@@ -21,7 +21,6 @@ module FillUpListing =
         | NoOp
         | NavigateToAdd
         | NavigateToUpdate of FillUp
-        | NavigateToDetails of FillUp
 
     type Msg =
         | NewFillUpTapped
@@ -66,6 +65,7 @@ module FillUpListing =
             let m = { model with FillUps = Loaded fillUps }
 
             m, Cmd.none, ExternalMsg.NoOp
+        | NewFillUpTapped -> model, Cmd.none, ExternalMsg.NavigateToAdd
 
     let view model dispatch =
         let content =

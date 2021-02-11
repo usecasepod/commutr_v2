@@ -14,6 +14,9 @@ module App =
         | GoToUpdateVehicle of Vehicle option
         | UpdateWhenVehicleSaved
         | GoToVehicleDetails of Vehicle
+        | GoToFillUpUpdate of FillUpUpdate.CreateOrUpdate
+        | FillUpUpdateMsg of FillUpUpdate.Msg
+        | UpdateWhenFillUpSaved
         | VehicleDetailsMsg of VehicleDetailsPage.Msg
         | NavigationPopped
 
@@ -21,6 +24,7 @@ module App =
         { VehicleListPageModel: VehicleListing.Model
           VehicleUpdatePageModel: VehicleUpdate.Model option
           VehicleDetailsPageModel: VehicleDetailsPage.Model option
+          FillUpUpdatePageModel: FillUpUpdate.Model option
 
           // Workaround Cmd limitation -- Can not pop a page in page stack and send Cmd at the same time
           // Otherwise it would pop pages 2 times in NavigationPage
@@ -30,7 +34,8 @@ module App =
     type Pages =
         { VehicleListing: ViewElement
           VehicleUpdate: ViewElement option
-          VehicleDetails: ViewElement option }
+          VehicleDetails: ViewElement option
+          FillUpUpdate: ViewElement option }
 
     let init () =
         let listModel, listMsg = VehicleListing.init ()
@@ -39,6 +44,7 @@ module App =
             { VehicleListPageModel = listModel
               VehicleUpdatePageModel = None
               VehicleDetailsPageModel = None
+              FillUpUpdatePageModel = None
               WorkaroundNavPageBug = false
               WorkaroundNavPageBugPendingCmd = Cmd.none }
 
@@ -56,20 +62,33 @@ module App =
         | VehicleUpdate.ExternalMsg.NoOp -> Cmd.none
         | VehicleUpdate.ExternalMsg.GoBackAfterVehicleSaved -> Cmd.ofMsg UpdateWhenVehicleSaved
 
-    let navigationMapper (model: Model) =
-        let editModel = model.VehicleUpdatePageModel
-        let detailModel = model.VehicleDetailsPageModel
+    let handleVehicleDetailsPageMsg externalMsg =
+        match externalMsg with
+        | VehicleDetailsPage.ExternalMsg.NoOp -> Cmd.none
+        | VehicleDetailsPage.ExternalMsg.GoToUpdateFillUp createOrUpdate ->
+            Cmd.ofMsg (Msg.GoToFillUpUpdate(createOrUpdate))
 
-        match (editModel, detailModel) with
-        | (Some _, None) ->
+    let handleFillUpUpdatePageMsg externalMsg =
+        match externalMsg with
+        | FillUpUpdate.ExternalMsg.NoOp -> Cmd.none
+        | FillUpUpdate.ExternalMsg.GoBackAfterFillUpSaved -> Cmd.ofMsg UpdateWhenFillUpSaved
+
+    let navigationMapper (model: Model) =
+        let updateModel = model.VehicleUpdatePageModel
+        let detailModel = model.VehicleDetailsPageModel
+        let fillUpUpdateModel = model.FillUpUpdatePageModel
+
+        match (updateModel, detailModel, fillUpUpdateModel) with
+        | (Some _, None, None) ->
             { model with
                   VehicleUpdatePageModel = None }
-        | (None, Some _) ->
+        | (None, Some _, None) ->
             { model with
                   VehicleDetailsPageModel = None }
-        | (_, _) -> model
-
-
+        | (None, Some _, Some _) ->
+            { model with
+                  FillUpUpdatePageModel = None }
+        | (_, _, _) -> model
 
     let update msg (model: Model) =
         match msg with
@@ -119,12 +138,38 @@ module App =
                   VehicleDetailsPageModel = Some m },
             (Cmd.map VehicleDetailsMsg cmd)
         | VehicleDetailsMsg msg ->
-            let m, cmd =
+            let m, cmd, externalMsg =
                 VehicleDetailsPage.update msg model.VehicleDetailsPageModel.Value
+
+            let externalCmd = handleVehicleDetailsPageMsg externalMsg
+
+            let batchCmd =
+                Cmd.batch [ (Cmd.map VehicleDetailsMsg cmd)
+                            externalCmd ]
 
             { model with
                   VehicleDetailsPageModel = Some m },
-            Cmd.map VehicleDetailsMsg cmd
+            batchCmd
+        | GoToFillUpUpdate createOrUpdate ->
+            let m, cmd = FillUpUpdate.init createOrUpdate
+
+            { model with
+                  FillUpUpdatePageModel = Some m },
+            (Cmd.map FillUpUpdateMsg cmd)
+        | FillUpUpdateMsg msg ->
+            let m, cmd, external =
+                FillUpUpdate.update msg model.FillUpUpdatePageModel.Value
+
+            let externalCmd = handleFillUpUpdatePageMsg external
+
+            let batchCmd =
+                Cmd.batch [ (Cmd.map FillUpUpdateMsg cmd)
+                            externalCmd ]
+
+            { model with
+                  FillUpUpdatePageModel = Some m },
+            batchCmd
+
         | NavigationPopped ->
             match model.WorkaroundNavPageBug with
             | true ->
@@ -141,11 +186,13 @@ module App =
         let vehicleListing = allPages.VehicleListing
         let vehicleUpdate = allPages.VehicleUpdate
         let vehicleDetails = allPages.VehicleDetails
+        let fillUpUpdate = allPages.FillUpUpdate
 
-        match (vehicleUpdate, vehicleDetails) with
-        | (Some update, None) -> [ vehicleListing; update ]
-        | (None, Some detail) -> [ vehicleListing; detail ]
-        | (_, _) -> [ vehicleListing ]
+        match (vehicleUpdate, vehicleDetails, fillUpUpdate) with
+        | (Some update, None, None) -> [ vehicleListing; update ]
+        | (None, Some detail, None) -> [ vehicleListing; detail ]
+        | (None, Some detail, Some update) -> [ vehicleListing; detail; update ]
+        | (_, _, _) -> [ vehicleListing ]
 
     let view model dispatch =
         let listingPage =
@@ -159,10 +206,15 @@ module App =
             model.VehicleDetailsPageModel
             |> Option.map (fun detailModel -> VehicleDetailsPage.view detailModel (VehicleDetailsMsg >> dispatch))
 
+        let fillupUpdatePage =
+            model.FillUpUpdatePageModel
+            |> Option.map (fun updateModel -> FillUpUpdate.view updateModel (FillUpUpdateMsg >> dispatch))
+
         let allPages =
             { VehicleListing = listingPage
               VehicleUpdate = updatePage
-              VehicleDetails = detailsPage }
+              VehicleDetails = detailsPage
+              FillUpUpdate = fillupUpdatePage }
 
         View.NavigationPage(
             barBackgroundColor = AppColors.cinereousMediumDark,
