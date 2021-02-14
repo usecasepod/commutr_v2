@@ -12,7 +12,7 @@ module FillUpRepository =
         let obj = FillUpObject()
         obj.Id <- FillUpId.value item.Id
         obj.Date <- item.Date
-        obj.FuelAmount <- item.FuelAmount
+        obj.FuelAmount <- Volume.value item.FuelAmount
         obj.PricePerFuelAmount <- item.PricePerFuelAmount
         obj.Notes <- item.Notes
         obj.Distance <- Distance.value item.Distance
@@ -22,13 +22,16 @@ module FillUpRepository =
     let convertToModel (obj: FillUpObject): FillUp =
         { Id = FillUpId.create obj.Id
           Date = obj.Date
-          FuelAmount = obj.FuelAmount
+          FuelAmount =
+              match Volume.create obj.FuelAmount with
+              | Ok v -> v
+              | _ -> Volume.T.Volume 0.000m
           PricePerFuelAmount = obj.PricePerFuelAmount
           Notes = obj.Notes
           Distance =
               match Distance.create obj.Distance with
               | Ok d -> d
-              | _ -> Distance.T.Distance 0.0m
+              | _ -> Distance.zero
           VehicleId = VehicleId.create obj.VehicleId }
 
     let loadFillUpsByVehicleId (vehicleId) =
@@ -40,6 +43,7 @@ module FillUpRepository =
                 database
                     .Table<FillUpObject>()
                     .Where(fun x -> x.VehicleId = id)
+                    .OrderByDescending(fun x -> x.Date)
                     .ToListAsync()
                 |> Async.AwaitTask
 

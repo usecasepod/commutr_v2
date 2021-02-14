@@ -33,7 +33,7 @@ module VehicleUpdate =
                 Make = ""
                 Model = ""
                 Year = Year.create 0
-                Odometer = Distance.T.Distance 0m
+                Odometer = Distance.zero
                 Notes = ""
                 IsPrimary = false } }
 

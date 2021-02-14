@@ -20,7 +20,7 @@ module FillUpUpdate =
     type Msg =
         | UpdateDate of DateTime
         | UpdateDistance of Distance.T
-        | FuelAmount of decimal
+        | UpdateFuelAmount of Volume.T
         | UpdateNotes of string
         | UpdatePricePerFuelAmount of decimal
         | SaveFillUp
@@ -35,8 +35,8 @@ module FillUpUpdate =
         { FillUp =
               { Id = FillUpId.create 0
                 Date = DateTime.Now
-                Distance = Distance.T.Distance 0.0m
-                FuelAmount = 0m
+                Distance = Distance.zero
+                FuelAmount = Volume.zero
                 Notes = ""
                 PricePerFuelAmount = 0m
                 VehicleId = vehicleId } }
@@ -76,7 +76,7 @@ module FillUpUpdate =
                                 Distance = distance } }
 
             m, Cmd.none, ExternalMsg.NoOp
-        | FuelAmount fuel ->
+        | UpdateFuelAmount fuel ->
             let m =
                 { model with
                       FillUp = { model.FillUp with FuelAmount = fuel } }
@@ -109,6 +109,9 @@ module FillUpUpdate =
             | FillUpId.T.FillUpId 0 -> "Create New Fill Up"
             | _ -> "Update Existing Fill Up"
 
+        let totalCost =
+            calculateTotal model.FillUp.FuelAmount model.FillUp.PricePerFuelAmount
+
         View.ContentPage(
             View.StackLayout(
                 children =
@@ -118,14 +121,14 @@ module FillUpUpdate =
                           dateSelected = fun e -> e.NewDate |> (UpdateDate >> dispatch)
                       )
                       View.Label(
-                          text = "Distance (Miles)",
+                          text = "Miles", //TODO: Units!
                           textColor = AppColors.cinereous,
                           fontAttributes = FontAttributes.Bold
                       )
                       View.Entry(
-                          placeholder = "360.5",
+                          placeholder = "360.0",
                           keyboard = Keyboard.Numeric,
-                          text = model.FillUp.Distance.ToString(),
+                          text = $"%M{(Distance.value model.FillUp.Distance)}",
                           clearButtonVisibility = ClearButtonVisibility.WhileEditing,
                           textChanged =
                               fun e ->
@@ -136,6 +139,51 @@ module FillUpUpdate =
                                       | None -> model.FillUp.Distance
                                   |> (UpdateDistance >> dispatch)
                       )
+                      View.Label(
+                          text = "$/Gallon",
+                          textColor = AppColors.cinereous,
+                          fontAttributes = FontAttributes.Bold
+                      )
+                      View.Entry(
+                          placeholder = "1.999",
+                          keyboard = Keyboard.Numeric,
+                          text = $"%M{model.FillUp.PricePerFuelAmount}",
+                          clearButtonVisibility = ClearButtonVisibility.WhileEditing,
+                          textChanged =
+                              fun e ->
+                                  e.NewTextValue
+                                  |> fun str ->
+                                      match stringToDecimal str with
+                                      | Some d -> d
+                                      | None -> model.FillUp.PricePerFuelAmount
+                                  |> (UpdatePricePerFuelAmount >> dispatch)
+                      )
+                      View.Label(
+                          text = "Gallons",
+                          textColor = AppColors.cinereous,
+                          fontAttributes = FontAttributes.Bold
+                      )
+                      View.Entry(
+                          placeholder = "12.000",
+                          keyboard = Keyboard.Numeric,
+                          text = $"%M{(Volume.value model.FillUp.FuelAmount)}",
+                          clearButtonVisibility = ClearButtonVisibility.WhileEditing,
+                          textChanged =
+                              fun e ->
+                                  e.NewTextValue
+                                  |> fun str ->
+                                      match stringToVolume str with
+                                      | Some v -> v
+                                      | None -> model.FillUp.FuelAmount
+                                  |> (UpdateFuelAmount >> dispatch)
+
+                      )
+                      View.Label(
+                          text = "Total $",
+                          textColor = AppColors.cinereous,
+                          fontAttributes = FontAttributes.Bold
+                      )
+                      View.Entry(isEnabled = false, text = $"%M{totalCost}")
                       View.Button(
                           text = "Save Vehicle",
                           backgroundColor = AppColors.cinereous,

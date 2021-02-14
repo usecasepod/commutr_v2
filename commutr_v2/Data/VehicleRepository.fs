@@ -24,7 +24,7 @@ module VehicleRepository =
           Odometer =
               match Distance.create obj.Odometer with
               | Ok o -> o
-              | _ -> Distance.T.Distance 0.0m //Reconsider this...?
+              | _ -> Distance.zero
           Notes = obj.Notes
           IsPrimary = obj.IsPrimary }
 

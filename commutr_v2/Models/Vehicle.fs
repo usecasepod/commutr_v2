@@ -12,4 +12,4 @@ module Vehicles =
 
     let formattedName vehicle =
         let year = Year.value vehicle.Year
-        sprintf "%i %s %s" year vehicle.Make vehicle.Model
+        $"{year} {vehicle.Make} {vehicle.Model}"

@@ -4,6 +4,14 @@ open CommutrV2.Models
 open System
 
 module Input =
+    let stringToDecimal str =
+        match str with
+        | "" -> Some 0.0m
+        | _ ->
+            try
+                str |> decimal |> Some
+            with :? FormatException -> None
+
     let distanceToString d =
         match Distance.value d with
         | 0m -> ""
@@ -11,7 +19,7 @@ module Input =
 
     let stringToDistance str =
         match str with
-        | "" -> Some(Distance.T.Distance 0.0m)
+        | "" -> Some(Distance.zero)
         | _ ->
             try
                 str
@@ -20,6 +28,25 @@ module Input =
                 |> fun result ->
                     match result with
                     | Ok o -> Some o
+                    | _ -> None
+            with :? FormatException -> None
+
+    let volumeToString v =
+        match Volume.value v with
+        | 0m -> ""
+        | d -> d.ToString()
+
+    let stringToVolume str =
+        match str with
+        | "" -> Some(Volume.T.Volume 0.000m)
+        | _ ->
+            try
+                str
+                |> decimal
+                |> Volume.create
+                |> fun result ->
+                    match result with
+                    | Ok v -> Some v
                     | _ -> None
             with :? FormatException -> None
 
