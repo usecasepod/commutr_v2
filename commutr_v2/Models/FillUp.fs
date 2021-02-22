@@ -13,7 +13,6 @@ module FillUps =
           VehicleId: VehicleId.T }
 
     let calculateTotal fuelAmount pricePerFuelAmount =
-        let total =
-            Volume.value fuelAmount * pricePerFuelAmount
-
-        Math.Round(total, 2)
+        match (fuelAmount, pricePerFuelAmount) with
+        | (Some fuel, Some price) -> Math.Round(Volume.value fuel * price, 2)
+        | _ -> 0.0m

@@ -22,6 +22,7 @@
     <Compile Include="Data\FillUpRepository.fs" />
     <Compile Include="Utils\Loading.fs" />
     <Compile Include="Utils\Input.fs" />
+    <Compile Include="Utils\Validation.fs" />
     <Compile Include="Components\VehicleCell.fs" />
     <Compile Include="Components\FillUpCell.fs" />
     <Compile Include="Views\VehicleUpdate.fs" />
