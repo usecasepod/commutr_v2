@@ -24,7 +24,7 @@ module FillUpCell =
                               direction = FlexDirection.Row,
                               children =
                                   [ View.Label(text = fillUp.Date.ToShortDateString())
-                                    View.Label(text = sprintf "%M MPG" fillUp.PricePerFuelAmount) ]
+                                    View.Label(text = sprintf "$%M" fillUp.PricePerFuelAmount) ]
                           )
                   ) ]
         ) //TODO: units of measure

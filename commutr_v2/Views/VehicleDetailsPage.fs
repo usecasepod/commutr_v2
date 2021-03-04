@@ -26,6 +26,7 @@ module VehicleDetailsPage =
         | UpdateWhenFillUpSaved
         | NavigationPopped
         | AddFillUp
+        | UpdateFillUp of FillUp
 
     let init vehicle =
         { Vehicle = vehicle; FillUps = Loading }, Cmd.ofMsg (FillUpListingMsg LoadFillUps)
@@ -34,6 +35,7 @@ module VehicleDetailsPage =
         match externalMsg with
         | FillUpListing.ExternalMsg.NoOp -> Cmd.none
         | FillUpListing.ExternalMsg.NavigateToAdd -> Cmd.ofMsg AddFillUp
+        | FillUpListing.ExternalMsg.NavigateToUpdate fillUp -> Cmd.ofMsg(UpdateFillUp fillUp)
 
     let update msg (model: Model) =
         match msg with
@@ -57,6 +59,8 @@ module VehicleDetailsPage =
             ExternalMsg.NoOp
         | AddFillUp ->
             model, Cmd.none, ExternalMsg.GoToUpdateFillUp(FillUpUpdate.CreateOrUpdate.Create model.Vehicle.Id)
+        | UpdateFillUp fillUp ->
+            model, Cmd.none, ExternalMsg.GoToUpdateFillUp(FillUpUpdate.CreateOrUpdate.Update fillUp)
 
     let view model dispatch =
         let fillUpListingTab =

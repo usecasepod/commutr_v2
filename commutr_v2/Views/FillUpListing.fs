@@ -66,6 +66,7 @@ module FillUpListing =
 
             m, Cmd.none, ExternalMsg.NoOp
         | NewFillUpTapped -> model, Cmd.none, ExternalMsg.NavigateToAdd
+        | UpdateFillUp fillUp -> model, Cmd.none, ExternalMsg.NavigateToUpdate fillUp
 
     let view model dispatch =
         let content =
@@ -106,6 +107,11 @@ module FillUpListing =
                         (fun item ->
                             View.SwipeView(
                                 backgroundColor = AppColors.silverSandLight,
+                                gestureRecognizers =
+                                    [ View.TapGestureRecognizer(
+                                          command = (fun () -> dispatch (UpdateFillUp item)),
+                                          numberOfTapsRequired = 2
+                                      ) ],
                                 rightItems =
                                     View.SwipeItems(
                                         items =
