@@ -9,8 +9,6 @@ open SkiaSharp.Views.Forms
 open Xamarin.Forms
 
 module VehicleCell =
-    let init (initModel: Vehicle) = initModel
-
     let view (vehicle) =
         View.StackLayout
             (padding = Thickness 5.0,

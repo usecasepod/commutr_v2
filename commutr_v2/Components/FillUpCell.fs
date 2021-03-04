@@ -6,8 +6,6 @@ open Fabulous.XamarinForms
 open Xamarin.Forms
 
 module FillUpCell =
-    let init (initModel: FillUp) = initModel
-
     let view fillUp =
         View.StackLayout(
             padding = Thickness 5.0,

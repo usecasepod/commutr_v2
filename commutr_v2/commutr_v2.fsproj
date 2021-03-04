@@ -25,6 +25,7 @@
     <Compile Include="Utils\Validation.fs" />
     <Compile Include="Components\VehicleCell.fs" />
     <Compile Include="Components\FillUpCell.fs" />
+    <Compile Include="Components\ValidatableEntry.fs" />
     <Compile Include="Views\VehicleUpdate.fs" />
     <Compile Include="Views\VehicleListing.fs" />
     <Compile Include="Views\FillUpUpdate.fs" />

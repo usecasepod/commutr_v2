@@ -35,11 +35,6 @@ module VehicleDetailsPage =
         | FillUpListing.ExternalMsg.NoOp -> Cmd.none
         | FillUpListing.ExternalMsg.NavigateToAdd -> Cmd.ofMsg AddFillUp
 
-    let handleFillUpUpdateExternalMsg externalMsg =
-        match externalMsg with
-        | FillUpUpdate.ExternalMsg.GoBackAfterFillUpSaved -> Cmd.ofMsg UpdateWhenFillUpSaved
-        | FillUpUpdate.ExternalMsg.NoOp -> Cmd.none
-
     let update msg (model: Model) =
         match msg with
         | FillUpListingMsg fillUpMsg ->

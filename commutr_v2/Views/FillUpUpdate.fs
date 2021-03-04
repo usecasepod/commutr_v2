@@ -214,7 +214,7 @@ module FillUpUpdate =
                       )
                       View.Entry(isEnabled = false, text = (sprintf "%M" totalCost))
                       View.Button(
-                          text = "Save Vehicle",
+                          text = "Save Fill Up",
                           backgroundColor = AppColors.cinereous,
                           textColor = AppColors.ghostWhite,
                           command = fun () -> dispatch SaveFillUp

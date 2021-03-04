@@ -181,6 +181,15 @@ module App =
 
                 newModel, model.WorkaroundNavPageBugPendingCmd
             | false -> navigationMapper model, Cmd.none
+        | UpdateWhenFillUpSaved ->
+            let cmd =
+                Cmd.ofMsg (VehicleDetailsMsg(VehicleDetailsPage.Msg.FillUpListingMsg(FillUpListing.Msg.LoadFillUps)))
+
+            { model with
+                  FillUpUpdatePageModel = None
+                  WorkaroundNavPageBug = true
+                  WorkaroundNavPageBugPendingCmd = cmd },
+            Cmd.none
 
     let getPages allPages =
         let vehicleListing = allPages.VehicleListing
@@ -238,15 +247,15 @@ type App() as app =
 #endif
         |> XamarinFormsProgram.run app
 
-    // #if DEBUG
-    //     // Uncomment this line to enable live update in debug mode.
-    //     // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/tools.html#live-update for further  instructions.
-    //     //
-    //     do runner.EnableLiveUpdate()
-    // #endif
+// #if DEBUG
+//     // Uncomment this line to enable live update in debug mode.
+//     // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/tools.html#live-update for further  instructions.
+//     //
+//     do runner.EnableLiveUpdate()
+// #endif
 
-    // Uncomment this code to save the application state to app.Properties using Newtonsoft.Json
-    // See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/models.html#saving-application-state for further  instructions.
+// Uncomment this code to save the application state to app.Properties using Newtonsoft.Json
+// See https://fsprojects.github.io/Fabulous/Fabulous.XamarinForms/models.html#saving-application-state for further  instructions.
 //    let modelId = "model"
 //
 //    override __.OnSleep() =
